@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Simulasi PLTA — Sumber Energi Terbarukan</title>
+<meta name="description" content="Simulasi virtual Pembangkit Listrik Tenaga Air untuk materi Sumber Energi Terbarukan, Fase E.">
+<link rel="stylesheet" href="aset/gaya.css">
+</head>
+<body>
+
+<header class="kepala">
+  <div class="merek">
+    <span class="merek-judul">Simulasi Pembangkit Listrik</span>
+    <span class="merek-sub">Materi Sumber Energi Terbarukan &middot; Fase E</span>
+  </div>
+  <nav class="tab-modul" id="tabModul" aria-label="Pilih jenis pembangkit">
+    <button type="button" class="tab aktif" data-modul="plta">PLTA</button>
+    <button type="button" class="tab" data-modul="plts" disabled title="Belum dikerjakan">PLTS</button>
+    <button type="button" class="tab" data-modul="pltb" disabled title="Belum dikerjakan">PLTB</button>
+  </nav>
+</header>
+
+<main class="tata">
+
+  <!-- ================= kolom kiri: visualisasi + kendali ================= -->
+  <section class="panggung" aria-label="Visualisasi simulasi">
+    <div class="panggung-kepala">
+      <h1 id="judulModul">Pembangkit Listrik Tenaga Air</h1>
+      <span class="lencana" id="lencanaSkala">PLTA skala kecil (PLTMH)</span>
+    </div>
+
+    <div class="wadah-visual" id="wadahVisual"></div>
+
+    <div class="bilah-kendali" id="bilahKendali">
+      <div class="kendali-tombol">
+        <button type="button" class="tombol utama" id="btnStart">Mulai</button>
+        <button type="button" class="tombol" id="btnPause" disabled>Jeda</button>
+        <button type="button" class="tombol" id="btnUlangi" disabled>Ulangi Percobaan</button>
+      </div>
+      <div class="kotak-timer">
+        <span class="timer-angka" id="timerTeks">00:00</span>
+        <span class="timer-total">/ <span id="timerTotal">01:00</span></span>
+        <span class="timer-jam" id="timerJam">= 0,0000 jam</span>
+      </div>
+    </div>
+    <p class="pesan-status" id="pesanStatus" role="status">Atur debit dan head, lalu tekan Mulai.</p>
+  </section>
+
+  <!-- ================= kolom kanan: keluaran + pengatur ================= -->
+  <aside class="samping">
+
+    <section class="kartu" aria-label="Hasil pengukuran">
+      <h2 class="kartu-judul">Hasil Pengukuran</h2>
+      <div class="kisi-keluaran">
+        <div class="keluaran">
+          <span class="keluaran-label">Daya</span>
+          <span class="keluaran-nilai"><span id="nilaiDaya">0,00</span> <em>kW</em></span>
+        </div>
+        <div class="keluaran">
+          <span class="keluaran-label">Energi</span>
+          <span class="keluaran-nilai"><span id="nilaiEnergi">0,000</span> <em>kWh</em></span>
+        </div>
+        <div class="keluaran">
+          <span class="keluaran-label">Putaran</span>
+          <span class="keluaran-nilai"><span id="nilaiRpm">0</span> <em>rpm</em></span>
+        </div>
+        <div class="keluaran">
+          <span class="keluaran-label">Kondisi waduk</span>
+          <span class="keluaran-nilai kecil"><span class="titik" id="titikWaduk"></span><span id="nilaiWaduk">Normal</span></span>
+        </div>
+      </div>
+      <p class="catatan-kecil" id="catatanEnergi">Energi dihitung dari durasi percobaan yang sedang berjalan.</p>
+    </section>
+
+    <section class="kartu" aria-label="Preset skenario lingkungan">
+      <h2 class="kartu-judul">Preset Lingkungan</h2>
+      <div class="daftar-preset" id="daftarPreset"></div>
+      <p class="catatan-kecil" id="ketPreset"></p>
+    </section>
+
+    <section class="kartu" aria-label="Pengatur percobaan">
+      <h2 class="kartu-judul">Pengatur Percobaan</h2>
+
+      <div class="pengatur">
+        <div class="pengatur-kepala">
+          <label for="sliderQ">Debit air (Q)</label>
+          <output class="pengatur-nilai" id="nilaiQ">0,30 m³/s</output>
+        </div>
+        <input type="range" id="sliderQ" min="0.05" max="0.60" step="0.01" value="0.30">
+        <div class="pengatur-kaki"><span id="minQ">0,05</span><span id="maksQ">0,60 m³/s</span></div>
+      </div>
+
+      <div class="pengatur">
+        <div class="pengatur-kepala">
+          <label for="sliderH">Ketinggian jatuh (H)</label>
+          <output class="pengatur-nilai" id="nilaiH">15,0 m</output>
+        </div>
+        <input type="range" id="sliderH" min="4" max="25" step="0.5" value="15">
+        <div class="pengatur-kaki"><span id="minH">4 m</span><span id="maksH">25 m</span></div>
+      </div>
+
+      <div class="pengatur">
+        <div class="pengatur-kepala"><span class="label-durasi">Durasi percobaan</span></div>
+        <div class="pilih-durasi" id="pilihDurasi"></div>
+        <p class="catatan-kecil">Semua kelompok memakai durasi yang sama supaya energi (kWh) bisa dibandingkan.</p>
+      </div>
+    </section>
+  </aside>
+
+  <!-- ================= panel Data & Analisis ================= -->
+  <section class="panel panel-data" aria-label="Data dan analisis">
+    <div class="panel-kepala">
+      <h2>Data &amp; Analisis</h2>
+      <div class="panel-aksi">
+        <button type="button" class="tombol kecil" id="btnKartu" disabled>Kartu Data</button>
+        <button type="button" class="tombol kecil" id="btnSalin" disabled>Salin Tabel</button>
+        <button type="button" class="tombol kecil" id="btnCsv" disabled>Unduh CSV</button>
+        <button type="button" class="tombol kecil bahaya" id="btnHapus" disabled>Hapus Semua Data</button>
+      </div>
+    </div>
+
+    <div class="panel-isi">
+      <div class="blok-tabel">
+        <div class="blok-kepala">
+          <span class="blok-judul">Tabel data (<span id="jumlahData">0</span> baris)</span>
+          <button type="button" class="tombol catat" id="btnCatat" disabled>Catat Data</button>
+        </div>
+        <div class="pembungkus-tabel">
+          <table class="tabel-data">
+            <thead id="kepalaTabel"></thead>
+            <tbody id="isiTabel"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="blok-grafik">
+        <div class="blok-kepala">
+          <div class="pilih-grafik" id="pilihGrafik"></div>
+          <label class="centang"><input type="checkbox" id="centangModel" checked> Garis model</label>
+        </div>
+        <div class="kanvas-bungkus"><canvas id="kanvasSebar"></canvas></div>
+        <p class="catatan-kecil" id="ketGrafikSebar">Belum ada data.</p>
+      </div>
+    </div>
+
+    <div class="blok-grafik lebar">
+      <div class="blok-kepala">
+        <span class="blok-judul">Putaran turbin terhadap waktu (rpm vs waktu)</span>
+        <span class="catatan-kecil" id="ketGrafikRpm">Jejak percobaan sebelumnya ditampilkan pudar.</span>
+      </div>
+      <div class="kanvas-bungkus"><canvas id="kanvasRpm"></canvas></div>
+    </div>
+  </section>
+
+  <!-- ================= panel Rumus ================= -->
+  <section class="panel panel-rumus" aria-label="Rumus">
+    <button type="button" class="tombol-lebar" id="btnRumus" aria-expanded="false">
+      <span>Tampilkan rumus</span>
+      <span class="panah" aria-hidden="true">▾</span>
+    </button>
+    <div class="isi-rumus" id="isiRumus" hidden>
+      <p>Daya yang tersedia pada air yang mengalir dari ketinggian H:</p>
+      <p class="rumus">P<sub>air</sub> = ρ · g · Q · H</p>
+      <p>Daya listrik yang benar-benar dihasilkan setelah kerugian gesekan, turbulensi, turbin, dan generator:</p>
+      <p class="rumus">P<sub>keluaran</sub> = η · ρ · g · Q · H</p>
+      <p>Energi listrik yang dihasilkan selama percobaan berlangsung t detik:</p>
+      <p class="rumus">E = P<sub>keluaran</sub> × t &nbsp;&nbsp; dengan t dalam jam</p>
+      <p>Putaran turbin pada sistem ini:</p>
+      <p class="rumus">n = n₀ · √( (Q · H) / (Q₀ · H₀) )</p>
+      <ul class="daftar-nilai">
+        <li>ρ = 1000 kg/m³ &nbsp;·&nbsp; g = 9,81 m/s²</li>
+        <li>η = 0,75 (75 %) — efisiensi sistem, nilai tetap untuk alat ini</li>
+        <li>n₀ = 900 rpm pada Q₀ = 0,30 m³/s dan H₀ = 15 m</li>
+      </ul>
+      <p class="catatan-kecil">Debit Q dan head H adalah dua besaran yang kamu ubah. Perhatikan besaran mana yang
+        berbanding lurus dan mana yang tidak, lalu bandingkan dengan data yang kamu kumpulkan.</p>
+    </div>
+  </section>
+
+</main>
+
+<!-- ================= Kartu Data ================= -->
+<div class="lapis" id="lapisKartu" hidden>
+  <div class="kartu-besar" role="dialog" aria-modal="true" aria-labelledby="kartuJudul">
+    <div class="kartu-besar-kepala">
+      <h2 id="kartuJudul">Kartu Data</h2>
+      <button type="button" class="tombol kecil" id="btnTutupKartu">Tutup</button>
+    </div>
+    <p class="catatan-kecil">Salin angka-angka ini ke tabel pengamatan di E-LKM, urut dari kiri ke kanan.</p>
+    <div class="kartu-besar-isi" id="kartuIsi"></div>
+    <p class="catatan-kecil" id="kartuBaris"></p>
+  </div>
+</div>
+
+<noscript>
+  <p style="padding:16px">Simulasi ini memerlukan JavaScript. Aktifkan JavaScript pada peramban, lalu muat ulang halaman.</p>
+</noscript>
+
+<script src="aset/konfigurasi.js"></script>
+<script src="aset/fisika.js"></script>
+<script src="aset/modul-plta.js"></script>
+<script src="aset/inti.js"></script>
+</body>
+</html>

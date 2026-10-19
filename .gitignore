@@ -1,0 +1,43 @@
+# ---------------------------------------------------------------------------
+# Abaikan bahan mentah skripsi dan artefak audit dari repositori publik.
+#
+# `_analysis/` memuat:
+#   - proposal_dump.txt / math_dump.txt  (dokumen proposal skripsi, 1.200+ baris)
+#   - nama lengkap & NIM penulis skripsi
+#   - 6 gambar + frame video hasil ekstraksi proposal
+#   - 107 tangkapan layar & 17 berkas JSON bukti audit (12 MB)
+#
+# Semua itu sengaja TIDAK dipublikasikan. Laporan audit yang sudah diringkas
+# tetap disertakan di `docs/` dan di akar repositori.
+# ---------------------------------------------------------------------------
+_analysis/
+
+# ---------------------------------------------------------------------------
+# Sistem operasi & editor
+# ---------------------------------------------------------------------------
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+.DS_Store
+*.swp
+*~
+.vscode/
+.idea/
+
+# ---------------------------------------------------------------------------
+# Node.js (dipakai hanya oleh skrip penguji di _analysis/, bukan oleh aplikasi)
+# ---------------------------------------------------------------------------
+node_modules/
+npm-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+package-lock.json.bak
+
+# ---------------------------------------------------------------------------
+# Berkas sementara penguji
+# ---------------------------------------------------------------------------
+*.tmp
+*.log
+tmp/
+temp/
