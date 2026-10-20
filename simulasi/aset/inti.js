@@ -366,6 +366,9 @@
     var t = Fisika.bulatkan(keadaan.t, 2);
     var baris = {
       no: keadaan.nomorData + 1,
+      /* preset dicatat per baris supaya CSV tetap jujur bila murid berganti
+         skenario di tengah sesi; kolom tabel tidak menampilkannya. */
+      preset: keadaan.preset,
       q: q, h: h, t: t,
       p: Fisika.bulatkan(p, 2),
       e: Fisika.bulatkan(Fisika.energiKWh(p, t), 3),
@@ -454,14 +457,22 @@
     return K.kolom.map(function (k) { return Fisika.formatAngka(b[k.kunci], k.desimal); }).join(pemisah);
   }
 
-  function teksTabel(pemisah, sertakanNomor) {
+  /* sertakanSkenario: hanya untuk CSV. Kolom tabel di layar (dan Salin Tabel)
+     sengaja tidak menambah kolom agar urutannya tetap sama dengan tabel
+     pengamatan E-LKM. CSV justru perlu kolom ini supaya baris dari skenario
+     berbeda tidak tercampur tanpa penanda. */
+  function teksTabel(pemisah, sertakanNomor, sertakanSkenario) {
     var kepala = [];
     if (sertakanNomor) { kepala.push('No'); }
+    if (sertakanSkenario) { kepala.push('Skenario'); }
     K.kolom.forEach(function (k) { kepala.push(k.label + ' (' + k.satuan + ')'); });
     var baris = [kepala.join(pemisah)];
     keadaan.data.forEach(function (b) {
       var isi = [];
       if (sertakanNomor) { isi.push(String(b.no)); }
+      if (sertakanSkenario) {
+        isi.push(b.preset ? Fisika.presetById(b.preset).nama : presetKini().nama);
+      }
       K.kolom.forEach(function (k) { isi.push(Fisika.formatAngka(b[k.kunci], k.desimal)); });
       baris.push(isi.join(pemisah));
     });
@@ -487,14 +498,61 @@
     });
   }
 
+  /* Cap waktu lokal dalam bentuk yang aman untuk nama berkas: 2026-10-19_1432 */
+  function capWaktuBerkas(d) {
+    function dua(n) { return (n < 10 ? '0' : '') + n; }
+    return d.getFullYear() + '-' + dua(d.getMonth() + 1) + '-' + dua(d.getDate()) +
+      '_' + dua(d.getHours()) + dua(d.getMinutes());
+  }
+
+  /* Cap waktu yang mudah dibaca manusia, untuk baris komentar CSV. */
+  function capWaktuBaca(d) {
+    function dua(n) { return (n < 10 ? '0' : '') + n; }
+    return d.getFullYear() + '-' + dua(d.getMonth() + 1) + '-' + dua(d.getDate()) +
+      ' ' + dua(d.getHours()) + ':' + dua(d.getMinutes());
+  }
+
+  /* Jumlah baris data yang tercatat pada skenario selain yang sedang aktif.
+     Bisa terjadi bila murid berganti skenario; CSV harus menyatakannya. */
+  function jumlahSkenarioLain(aktif) {
+    var n = 0;
+    keadaan.data.forEach(function (b) {
+      if (b.preset && b.preset !== aktif) { n++; }
+    });
+    return n;
+  }
+
   function unduhCsv() {
-    /* pemisah titik koma dan desimal koma: sesuai Excel ber-lokal Indonesia */
-    var teks = teksTabel(';', true);
+    /* pemisah titik koma dan desimal koma: sesuai Excel ber-lokal Indonesia.
+       Baris komentar '#' menyertakan metadata supaya berkas bisa dipakai
+       sebagai dokumentasi guru/peneliti, bukan sekadar cadangan angka. */
+    var kini = new Date();
+    var namaSekarang = presetKini().nama;
+    var lain = jumlahSkenarioLain(keadaan.preset);
+
+    var meta = [];
+    meta.push('# Simulasi Pembangkit Listrik Tenaga Air — data percobaan');
+    meta.push('# Skenario aktif: ' + namaSekarang +
+      ' (debit maks ' + Fisika.formatAngka(presetKini().qMaks, 2) + ' m³/s, ' +
+      'tinggi jatuh maks ' + Fisika.formatAngka(presetKini().hMaks, 1) + ' m)');
+    meta.push('# Durasi target per percobaan: ' + keadaan.durasi + ' s');
+    meta.push('# Tanggal unduh: ' + capWaktuBaca(kini));
+    meta.push('# Kelompok: ' + '____________________');
+    meta.push('# Jumlah baris data: ' + keadaan.data.length);
+    if (lain) {
+      meta.push('# PERHATIAN: ' + lain + ' baris berasal dari skenario lain. ' +
+        'Kolom "Skenario" pada tiap baris menunjukkan asalnya.');
+    }
+    meta.push('#');
+
+    var teks = meta.join('\n') + '\n' + teksTabel(';', true, true);
     var blob = new Blob(['\ufeff' + teks], { type: 'text/csv;charset=utf-8;' });
     var url = URL.createObjectURL(blob);
     var a = document.createElement('a');
     a.href = url;
-    a.download = 'data-plta-' + presetKini().id + '.csv';
+    /* Nama berkas memuat tanggal dan jam supaya beberapa unduhan dalam satu
+       pertemuan tidak saling menimpa dan tidak menyesatkan. */
+    a.download = 'data-plta-' + keadaan.preset + '-' + capWaktuBerkas(kini) + '.csv';
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -511,7 +569,11 @@
               '<span class="kb-satuan">' + k.satuan + '</span></div>';
     });
     el.kartuIsi.innerHTML = html;
+    /* Skenario dan durasi target ikut ditulis: tanpa itu angka di kartu tidak
+       bisa dipertanggungjawabkan saat disalin ke E-LKM. */
+    var namaSkenario = b.preset ? Fisika.presetById(b.preset).nama : presetKini().nama;
     el.kartuBaris.textContent = 'Baris ke-' + b.no + ' dari ' + keadaan.data.length +
+      ' · Skenario ' + namaSkenario + ' · Durasi target ' + keadaan.durasi + ' s' +
       '. Tekan Salin Tabel untuk menyalin seluruh baris sekaligus.';
     el.lapisKartu.hidden = false;
     kunciLatar(true);
@@ -858,12 +920,17 @@
       ? keadaan.rpmTampil
       : hasil.n;
     $('nilaiRpm').textContent = Fisika.formatAngka(nTampil, 0);
-    $('nilaiWaduk').textContent = hasil.waduk.label;
-    $('titikWaduk').style.background = hasil.waduk.warna;
-
+    /* Nilai ini BUKAN besaran yang diukur: ia perbandingan tinggi jatuh yang
+       diatur murid terhadap batas maksimum skenario yang dipilih. Label dibuat
+       eksplisit ("75 % · Normal") supaya tidak terbaca sebagai hasil pengukuran
+       waduk. Lihat keputusan #9. */
     var persen = hasil.waduk.rasio * 100;
-    $('catatanEnergi').textContent = 'Muka air ' + Fisika.formatAngka(persen, 0) + ' % dari maksimum preset ' +
-      presetKini().nama + '. Energi = daya × durasi berjalan.';
+    $('nilaiWaduk').textContent = Fisika.formatAngka(persen, 0) + ' % · ' + hasil.waduk.label;
+    $('titikWaduk').style.background = hasil.waduk.warna;
+    $('catatanEnergi').textContent =
+      'Tinggi jatuh air yang kamu atur = ' + Fisika.formatAngka(persen, 0) +
+      ' % dari maksimum skenario ' + presetKini().nama +
+      '. Ini perbandingan, bukan hasil pengukuran waduk. Energi = daya × durasi berjalan.';
   }
 
   function perbaruiTimer() {
