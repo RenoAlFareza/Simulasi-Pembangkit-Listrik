@@ -37,6 +37,7 @@
         <button type="button" class="tombol utama" id="btnStart">Mulai</button>
         <button type="button" class="tombol" id="btnPause" disabled>Jeda</button>
         <button type="button" class="tombol" id="btnUlangi" disabled>Ulangi Percobaan</button>
+        <button type="button" class="tombol catat" id="btnCatatBilah" disabled>Catat Data</button>
       </div>
       <div class="kotak-timer">
         <span class="timer-angka" id="timerTeks">00:00</span>
@@ -44,7 +45,7 @@
         <span class="timer-jam" id="timerJam">= 0,0000 jam</span>
       </div>
     </div>
-    <p class="pesan-status" id="pesanStatus" role="status">Atur debit dan head, lalu tekan Mulai.</p>
+    <p class="pesan-status" id="pesanStatus" role="status" aria-atomic="true">Atur debit dan tinggi jatuh air, lalu tekan Mulai.</p>
   </section>
 
   <!-- ================= kolom kanan: keluaran + pengatur ================= -->
@@ -62,7 +63,7 @@
           <span class="keluaran-nilai"><span id="nilaiEnergi">0,000</span> <em>kWh</em></span>
         </div>
         <div class="keluaran">
-          <span class="keluaran-label">Putaran</span>
+          <span class="keluaran-label">Putaran turbin</span>
           <span class="keluaran-nilai"><span id="nilaiRpm">0</span> <em>rpm</em></span>
         </div>
         <div class="keluaran">
@@ -93,7 +94,7 @@
 
       <div class="pengatur">
         <div class="pengatur-kepala">
-          <label for="sliderH">Ketinggian jatuh (H)</label>
+          <label for="sliderH">Tinggi jatuh air (head, H)</label>
           <output class="pengatur-nilai" id="nilaiH">15,0 m</output>
         </div>
         <input type="range" id="sliderH" min="4" max="25" step="0.5" value="15">
@@ -128,6 +129,8 @@
         </div>
         <div class="pembungkus-tabel">
           <table class="tabel-data">
+            <caption class="sr-only">Tabel data percobaan simulasi PLTA: debit, tinggi jatuh air,
+              durasi, daya, energi, dan putaran turbin</caption>
             <thead id="kepalaTabel"></thead>
             <tbody id="isiTabel"></tbody>
           </table>
@@ -139,7 +142,9 @@
           <div class="pilih-grafik" id="pilihGrafik"></div>
           <label class="centang"><input type="checkbox" id="centangModel" checked> Garis model</label>
         </div>
-        <div class="kanvas-bungkus"><canvas id="kanvasSebar"></canvas></div>
+        <div class="kanvas-bungkus"><canvas id="kanvasSebar" role="img"
+          aria-label="Grafik sebar data percobaan"
+          aria-describedby="ketGrafikSebar"></canvas></div>
         <p class="catatan-kecil" id="ketGrafikSebar">Belum ada data.</p>
       </div>
     </div>
@@ -149,7 +154,10 @@
         <span class="blok-judul">Putaran turbin terhadap waktu (rpm vs waktu)</span>
         <span class="catatan-kecil" id="ketGrafikRpm">Jejak percobaan sebelumnya ditampilkan pudar.</span>
       </div>
-      <div class="kanvas-bungkus"><canvas id="kanvasRpm"></canvas></div>
+      <div class="kanvas-bungkus"><canvas id="kanvasRpm" role="img"
+        aria-label="Grafik putaran turbin terhadap waktu"
+        aria-describedby="ketGrafikRpm"></canvas></div>
+      <ul class="legenda-rpm" id="legendaRpm"></ul>
     </div>
   </section>
 
@@ -173,7 +181,8 @@
         <li>η = 0,75 (75 %) — efisiensi sistem, nilai tetap untuk alat ini</li>
         <li>n₀ = 900 rpm pada Q₀ = 0,30 m³/s dan H₀ = 15 m</li>
       </ul>
-      <p class="catatan-kecil">Debit Q dan head H adalah dua besaran yang kamu ubah. Perhatikan besaran mana yang
+      <p class="catatan-kecil">Debit Q dan tinggi jatuh air (head) H adalah dua besaran yang kamu ubah. Perhatikan
+        besaran mana yang
         berbanding lurus dan mana yang tidak, lalu bandingkan dengan data yang kamu kumpulkan.</p>
     </div>
   </section>
@@ -182,7 +191,7 @@
 
 <!-- ================= Kartu Data ================= -->
 <div class="lapis" id="lapisKartu" hidden>
-  <div class="kartu-besar" role="dialog" aria-modal="true" aria-labelledby="kartuJudul">
+  <div class="kartu-besar" role="dialog" aria-modal="true" aria-labelledby="kartuJudul" tabindex="-1">
     <div class="kartu-besar-kepala">
       <h2 id="kartuJudul">Kartu Data</h2>
       <button type="button" class="tombol kecil" id="btnTutupKartu">Tutup</button>

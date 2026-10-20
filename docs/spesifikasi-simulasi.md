@@ -293,3 +293,124 @@ Catatan penyimpangan dari rancangan awal, semuanya disengaja:
 - **Jejak RPM dibatasi 6 kurva** agar grafik tidak menjadi tidak terbaca setelah satu pertemuan.
 - **Pita "pemulihan" 2 detik** digambar pada grafik RPM supaya jeda antara Mulai dan timer
   berjalan tidak tampak seperti kesalahan alat.
+
+---
+
+## 15. Revisi hasil audit UI/UX
+
+Perbaikan pada bagian ini berasal dari audit runtime (Chrome headless via CDP) dan dikerjakan
+melalui tiket GitHub #1–#8. Dokumen kontrak perbaikannya ada di
+[spesifikasi-perbaikan-uiux.md](spesifikasi-perbaikan-uiux.md).
+
+### 15.1 Istilah baku
+
+Satu besaran memakai satu nama di seluruh antarmuka:
+
+| Sebelum | Sesudah |
+|---|---|
+| "Ketinggian jatuh (H)" / "Head (m)" / "head" | **"Tinggi jatuh air (head, H)"** pada label pengatur; **"Tinggi jatuh air"** pada kepala tabel dan label sumbu grafik |
+| "Putaran" / "RPM" / "RPM (rpm)" | **"Putaran turbin (rpm)"** pada panel keluaran dan label sumbu; **"Putaran"** pada kepala tabel |
+
+Istilah Inggris tetap disertakan sekali dalam tanda kurung agar tersambung ke proposal, tetapi
+tidak dipakai sebagai nama utama. Urutan kolom tabel tidak berubah, sehingga kesetaraan dengan
+tabel pengamatan E-LKM tetap terjaga.
+
+### 15.2 Satu percobaan = satu baris data
+
+- **"Catat Data" hanya aktif setelah percobaan selesai** (`fase === 'selesai'`). Sebelumnya tombol
+  aktif sejak detik pertama, sehingga satu percobaan bisa menghasilkan beberapa baris dengan
+  durasi berbeda (terukur 0,049 kWh pada detik ke-2 vs 0,920 kWh pada detik ke-30 dari kondisi
+  yang sama). Penanda `sudahDicatat` mencegah satu baris tercatat dua kali.
+- **"Hapus Semua Data" membersihkan tabel dan kedua grafik**, bukan hanya model data. Sebelumnya
+  status menyatakan "Semua data dihapus" sementara tabel masih menampilkan baris lama.
+- Tombol "Catat Data" tersedia di dua tempat (bilah kendali dan panel Data & Analisis) dan selalu
+  berada dalam keadaan yang sama.
+
+### 15.3 Penggantian skenario tidak menghapus data
+
+Preset menentukan batas atas debit dan tinggi jatuh. Bila skenario diganti setelah ada data,
+titik lama bisa berada di luar jangkauan sumbu. Perilaku yang dipilih: **data dipertahankan**,
+grafik digambar ulang, dan titik yang di luar jangkauan **ditandai panah di tepi bidang** dengan
+keterangan berapa titik yang berada di luar. Data murid tidak dihapus dan tidak ada dialog
+pemblokir.
+
+### 15.4 Jeda membekukan percobaan secara utuh
+
+- Jeda saat fase pemulihan **tidak lagi memotong** sisa fase 2 detik. Penanda `jedaDari` menyimpan
+  fase asal sehingga melanjutkan percobaan meneruskan fase yang sama.
+- Animasi (roda turbin, partikel pipa, jet, gelombang, hujan) **berhenti selama jeda** karena
+  gelung mengirim `dt = 0`. Sebelumnya timer berhenti tetapi roda tetap berputar 83° dalam 600 ms.
+- Fase `siap` sengaja **tidak** dibekukan: saat berhenti, menggeser slider harus langsung
+  memperlihatkan perubahan kecepatan aliran sebagai pratinjau (§4).
+
+### 15.5 Grafik putaran turbin
+
+- **Kurva mulai dari nol** pada saat Mulai ditekan dan menanjak selama fase pemulihan. Sebelumnya
+  titik hanya didorong pada fase `jalan` dan membandingkan satuan waktu yang berbeda, sehingga
+  titik tercatat tiap ≈2,1 detik dan kurva baru muncul di detik ke-2 — fase pemulihan yang
+  dijanjikan §3.4 tidak pernah terlihat.
+- **Jarak antar titik konsisten** (≤ 0,08 detik sepanjang fase pemulihan dan fase berjalan).
+- **Angka putaran di panel mengikuti putaran roda** selama percobaan, bukan langsung nilai mantap.
+- **Legenda jejak digambar** di HTML di bawah kanvas, berisi kondisi (debit dan tinggi jatuh) tiap
+  percobaan. Warna kurva disamakan dengan warna baris tabel untuk percobaan yang sama.
+- **Garis model tidak tampil sebelum ada data.** Sebelumnya garis putus-putus sudah tergambar pada
+  tabel kosong, memperlihatkan bentuk hubungan yang justru ingin ditemukan murid (§6d).
+
+### 15.6 Kontras dan keterbacaan
+
+- Token `--hijau` `#1f9d55 → #157a43` (putih di atasnya 3,49:1 → 5,39:1) dan `--jingga`
+  `#d98a1f → #8a5f10` (2,76:1 → 5,64:1). Satu perubahan ini memperbaiki tombol "Catat Data" saat
+  aktif, teks status selesai, dan penanda kondisi waduk.
+- Warna dot kondisi waduk disesuaikan agar ≥ 3:1 terhadap latar panel: Penuh `#157a43`,
+  Normal `#1c62a8`, Rendah `#8a5f10`, Kritis `#c0392b`.
+- Palet seri data digelapkan agar label putih di dalam titik ≥ 4,5:1.
+- **Kontrol nonaktif tidak lagi memakai `opacity`** melainkan warna eksplisit, sehingga teks tetap
+  terbaca (sebelumnya turun ke 1,34–1,51:1) dan pilihan yang aktif tetap dapat dibedakan.
+- Warna kanvas grafik digelapkan: angka sumbu dan teks keadaan kosong ≥ 4,5:1, garis model ≥ 3:1.
+- Label diagram yang gagal kontras diberi piring latar.
+
+### 15.7 Aksesibilitas
+
+- **Dialog Kartu Data berperilaku sebagai modal**: fokus masuk saat dibuka, Tab/Shift+Tab berputar
+  di dalam dialog, latar (`main`, `header`) diberi `inert`, halaman tidak dapat digulir, Escape dan
+  tombol Tutup mengembalikan fokus ke tombol pembuka.
+- **Kedua kanvas grafik** memiliki `role="img"`, `aria-label`, dan `aria-describedby` yang menunjuk
+  ke kalimat keterangan yang sudah ada.
+- **Tabel data** memiliki `<caption>` tersedia bagi pembaca layar dan seluruh `<th>` memiliki
+  `scope="col"`.
+- **Status pilihan** (tab, preset, durasi, pemilih grafik) dinyatakan dengan `aria-pressed`, dan
+  pilihan aktif diberi penanda non-warna (garis tepi tebal serta tanda centang pada preset).
+- **`prefers-reduced-motion` dihormati**: kelima animasi utama berhenti, sedangkan angka panel dan
+  timer tetap berjalan.
+- Slider debit dan tinggi jatuh memiliki `aria-valuetext` sehingga satuannya ikut diumumkan.
+
+### 15.8 Tata letak dan komposisi
+
+- Ambang tata letak dua kolom **1040 px → 1000 px**, sehingga laptop sekolah 1024×768 mendapat dua
+  kolom (tinggi halaman 2365 px → ±1301 px).
+- Pada layar pendek (tinggi ≤ 800 px), tinggi diagram dibatasi 300 px dan panel data naik ke
+  lipatan pertama. Tombol "Catat Data" kini berada di bilah kendali dan terlihat tanpa menggulir
+  pada 1366×768 maupun 1024×768.
+- Kolom samping tidak terpotong: pada layar pendek perilaku menempel dilepas.
+- **Skala tipografi dikunci 6 langkah** (`0,7 · 0,8 · 0,9 · 1 · 1,3 · 1,7` rem) dari sebelumnya
+  17 ukuran berbeda.
+- **Irama jarak** diseragamkan ke tangga 4/8/12/16/24/32 px.
+- **Komposisi diagram**: `viewBox` dirapatkan menjadi `0 50 1000 420` sehingga bagian mesin
+  menempati ±52 % tinggi kanvas (sebelumnya 36 %), diameter turbin diperbesar, dan seluruh elemen
+  berada di dalam bidang gambar (sebelumnya empat elemen terpotong, termasuk label "Turbin").
+- **Kartu Data** memakai susunan 3×2 sehingga tidak ada kotak yang menggantung sendirian
+  (sebelumnya 5+1).
+
+### 15.9 Hasil verifikasi setelah revisi
+
+| Pengujian | Hasil |
+|---|---|
+| Penguji model | LULUS 26, GAGAL 0 |
+| Kriteria penerimaan tiket #1–#8 | 50 dari 50 lulus |
+| Regresi tiga percobaan 30 detik | LULUS; durasi nyata 32,08 · 32,12 · 32,12 detik (galat maks 0,16 %); 3 baris data; legenda 4 entri; galat halaman 0 |
+| Kontras | 0 kegagalan pada teks aktif (sebelumnya 9, semuanya komponen nonaktif) |
+| Dialog Kartu Data | fokus di dalam dialog, 0 Tab keluar, fokus kembali ke tombol pembuka |
+| `prefers-reduced-motion` | roda, partikel, jet, gelombang, dan hujan beku; timer tetap berjalan |
+| Luber horizontal | aman pada 360, 390, 560, 768, 820, 1024, 1366, 1440 px |
+| Galat JavaScript | tidak ada |
+

@@ -17,8 +17,11 @@
   var K = KONFIG;
   var KUNCI_SIMPAN = 'simulasi-plta-v1';
 
-  var WARNA = ['#1565c0', '#c0392b', '#1f9d55', '#d98a1f', '#7b3fa0',
-               '#00838f', '#ad1457', '#4e342e'];
+  /* Warna seri data. Label putih di dalam titik butuh >= 4,5:1, jadi tiap warna
+     harus cukup gelap. Nilai lama #1f9d55 (3,49:1) dan #d98a1f (2,76:1) gagal;
+     palet ini semuanya >= 5,6:1 terhadap putih. */
+  var WARNA = ['#0d47a1', '#a01d12', '#146c3b', '#8a5f10', '#5b2a80',
+               '#00636d', '#8c0d45', '#3b241f'];
 
   var el = {};
   var keadaan = {
@@ -27,6 +30,10 @@
     q: 0.30,
     h: 15,
     fase: 'siap',
+    /* Fase asal sebelum dijeda: 'mulai' (pemulihan putaran) atau 'jalan'.
+       Tanpa ini, jeda saat pemulihan akan melompat langsung ke jam percobaan
+       dan sisa fase pemulihan hilang (lihat tekanJeda). */
+    jedaDari: null,
     t: 0,
     tSejakMulai: 0,
     energi: 0,
@@ -42,6 +49,9 @@
     /* Ditandai begitu jejak percobaan ini masuk ke jejakRpm, supaya "Catat Data"
        lalu "Ulangi Percobaan" tidak menyimpan kurva yang sama dua kali. */
     jejakDisimpan: false,
+    /* Ditandai setelah baris data tercatat, supaya satu percobaan tidak bisa
+       menghasilkan dua baris walau tombol Catat ditekan berulang. */
+    sudahDicatat: false,
     grafik: 'q-p',
     garisModel: K.garisModelBawaan,
     rumusTerbuka: K.rumusTerbukaBawaan,
@@ -90,6 +100,13 @@
     el.pesanStatus.className = 'pesan-status' + (kelas ? ' ' + kelas : '');
   }
 
+  /* Garis model hanya boleh tampil bila dicentang DAN sudah ada minimal satu
+     titik data. Menampilkannya pada tabel kosong berarti memperlihatkan bentuk
+     hubungan yang justru ingin ditemukan murid pada tahap merumuskan hipotesis. */
+  function garisModelTampil() {
+    return keadaan.garisModel && keadaan.data.length > 0;
+  }
+
   /* ------------------------------------------------------------- simpan/muat */
   function simpan() {
     try {
@@ -136,6 +153,7 @@
       var b = document.createElement('button');
       b.type = 'button';
       b.className = 'preset' + (p.id === keadaan.preset ? ' aktif' : '');
+      b.setAttribute('aria-pressed', p.id === keadaan.preset ? 'true' : 'false');
       b.dataset.preset = p.id;
       b.innerHTML = '<strong>' + p.nama + '</strong><span>Q maks ' + Fisika.formatAngka(p.qMaks, 2) +
                     ' m³/s<br>H maks ' + Fisika.formatAngka(p.hMaks, 1) + ' m</span>';
@@ -152,6 +170,7 @@
       var b = document.createElement('button');
       b.type = 'button';
       b.className = 'durasi' + (d === keadaan.durasi ? ' aktif' : '');
+      b.setAttribute('aria-pressed', d === keadaan.durasi ? 'true' : 'false');
       b.dataset.durasi = String(d);
       b.textContent = d + ' s';
       b.addEventListener('click', function () {
@@ -172,6 +191,7 @@
       var b = document.createElement('button');
       b.type = 'button';
       b.className = keadaan.grafik === g.id ? 'aktif' : '';
+      b.setAttribute('aria-pressed', keadaan.grafik === g.id ? 'true' : 'false');
       b.dataset.grafik = g.id;
       b.textContent = g.judul;
       b.addEventListener('click', function () {
@@ -188,9 +208,11 @@
     var tr = document.createElement('tr');
     var th = document.createElement('th');
     th.textContent = 'No';
+    th.setAttribute('scope', 'col');
     tr.appendChild(th);
     K.kolom.forEach(function (k) {
       var c = document.createElement('th');
+      c.setAttribute('scope', 'col');
       c.innerHTML = k.label + '<br><span style="font-weight:600">(' + k.satuan + ')</span>';
       tr.appendChild(c);
     });
@@ -222,24 +244,38 @@
   }
 
   function perbaruiLabelPengatur() {
-    $('nilaiQ').textContent = Fisika.formatAngka(keadaan.q, 2) + ' m³/s';
-    $('nilaiH').textContent = Fisika.formatAngka(keadaan.h, 1) + ' m';
+    var teksQ = Fisika.formatAngka(keadaan.q, 2) + ' m³/s';
+    var teksH = Fisika.formatAngka(keadaan.h, 1) + ' m';
+    $('nilaiQ').textContent = teksQ;
+    $('nilaiH').textContent = teksH;
+    /* Tanpa aria-valuetext, pembaca layar mengumumkan "0.3" tanpa satuan. */
+    el.sliderQ.setAttribute('aria-valuetext', teksQ);
+    el.sliderH.setAttribute('aria-valuetext', teksH);
   }
 
   function pilihPreset(id) {
     if (balikkan()) { return; }
+    /* Preset menentukan batas atas debit dan tinggi jatuh. Menggantinya setelah
+       ada data bisa membuat titik lama berada di luar jangkauan sumbu. Data
+       TIDAK dihapus (itu akan menghilangkan pekerjaan murid dan memaksa dialog
+       yang memblokir); sebagai gantinya grafik digambar ulang dan titik yang
+       berada di luar jangkauan ditandai secara terlihat di tepi bidang, dengan
+       keterangan berapa titik yang di luar. */
     keadaan.preset = id;
     ModulPLTA.terapkanPreset(Fisika.presetById(id));
     terapkanBatas();
     bangunPreset();
     resetKeSiap();
     perbaruiSemua(0);
+    gambarSebar();
+    gambarRpm();
     simpan();
   }
 
   /* --------------------------------------------------------------- tindakan */
   function resetKeSiap() {
     keadaan.fase = 'siap';
+    keadaan.jedaDari = null;
     keadaan.t = 0;
     keadaan.tSejakMulai = 0;
     keadaan.energi = 0;
@@ -247,6 +283,7 @@
     keadaan.animasi = 1;
     keadaan.titikSekarang = [];
     keadaan.jejakDisimpan = false;
+    keadaan.sudahDicatat = false;
     jamRamp.reset();
     jamJalan.reset();
   }
@@ -262,8 +299,9 @@
     var hasil = Fisika.hitung(keadaan.qKunci, keadaan.hKunci, keadaan.preset);
     keadaan.pKunci = hasil.p;
     keadaan.nKunci = hasil.n;
-    keadaan.titikSekarang = [];
+    keadaan.titikSekarang = [{ x: 0, n: 0 }];
     keadaan.jejakDisimpan = false;
+    keadaan.sudahDicatat = false;
     jamRamp.mulai();
     aturPesan('Turbin mulai berputar. Timer akan berjalan setelah putaran tercapai.', 'sorot');
     perbaruiKunci();
@@ -272,14 +310,25 @@
   function tekanJeda() {
     if (keadaan.fase === 'jalan') {
       jamJalan.jeda();
+      keadaan.jedaDari = 'jalan';
       keadaan.fase = 'jeda';
       aturPesan('Dijeda pada ' + detikKeTeks(keadaan.t) + '. Timer dan energi berhenti.');
     } else if (keadaan.fase === 'jeda') {
-      jamJalan.mulai();
-      keadaan.fase = 'jalan';
-      aturPesan('Percobaan dilanjutkan.', 'sorot');
+      /* Kembali ke fase asal, bukan selalu ke 'jalan': bila dijeda saat
+         pemulihan putaran, sisa fase pemulihan harus diteruskan. */
+      if (keadaan.jedaDari === 'mulai') {
+        jamRamp.mulai();
+        keadaan.fase = 'mulai';
+        aturPesan('Dilanjutkan. Putaran turbin meneruskan pemulihan.', 'sorot');
+      } else {
+        jamJalan.mulai();
+        keadaan.fase = 'jalan';
+        aturPesan('Percobaan dilanjutkan.', 'sorot');
+      }
+      keadaan.jedaDari = null;
     } else if (keadaan.fase === 'mulai') {
       jamRamp.jeda();
+      keadaan.jedaDari = 'mulai';
       keadaan.fase = 'jeda';
       aturPesan('Dijeda saat pemulihan putaran.');
     }
@@ -296,19 +345,21 @@
     perbaruiKunci();
   }
 
-  function simpanJejak() {
+  /* warnaPaksa: warna baris tabel yang menjadi pasangan kurva ini, supaya
+     warna jejak di grafik sama dengan warna titik data/baris tabel. */
+  function simpanJejak(warnaPaksa) {
     if (keadaan.jejakDisimpan) { return; }
     keadaan.jejakDisimpan = true;
     keadaan.jejakRpm.push({
-      label: 'Q ' + Fisika.formatAngka(keadaan.qKunci, 2) + ' · H ' + Fisika.formatAngka(keadaan.hKunci, 1),
-      warna: WARNA[(keadaan.jejakRpm.length + keadaan.data.length) % WARNA.length],
+      label: 'Debit ' + Fisika.formatAngka(keadaan.qKunci, 2) + ' · Tinggi jatuh air ' + Fisika.formatAngka(keadaan.hKunci, 1),
+      warna: warnaPaksa || WARNA[keadaan.jejakRpm.length % WARNA.length],
       titik: keadaan.titikSekarang.slice()
     });
     if (keadaan.jejakRpm.length > 6) { keadaan.jejakRpm.shift(); }
   }
 
   function tekanCatat() {
-    if (keadaan.t < 1) { return; }
+    if (keadaan.fase !== 'selesai' || keadaan.sudahDicatat) { return; }
     var q = keadaan.qKunci, h = keadaan.hKunci;
     var p = Fisika.dayaKeluarKW(q, h);
     var n = Fisika.rpm(q, h);
@@ -323,9 +374,13 @@
     };
     keadaan.nomorData += 1;
     keadaan.data.push(baris);
-    if (keadaan.titikSekarang.length) { simpanJejak(); }
+    /* Satu percobaan hanya boleh menghasilkan satu baris, walau tombol
+       ditekan berkali-kali (mis. klik ganda atau papan tik). */
+    keadaan.sudahDicatat = true;
+    if (keadaan.titikSekarang.length) { simpanJejak(baris.warna); }
     perbaruiTabel(true);
     perbaruiTombolData();
+    perbaruiKunci();
     gambarSebar();
     gambarRpm();
     simpan();
@@ -335,6 +390,7 @@
 
   function tekanHapus() {
     if (!keadaan.data.length) { return; }
+    var sedangBerjalan = balikkan();
     if (!window.confirm('Hapus semua ' + keadaan.data.length + ' baris data dan semua jejak grafik? Tindakan ini tidak bisa dibatalkan.')) {
       return;
     }
@@ -343,10 +399,17 @@
     keadaan.titikSekarang = [];
     keadaan.nomorData = 0;
     resetKeSiap();
+    /* Tabel dan grafik harus ikut dibersihkan. Tanpa ini, model data sudah
+       kosong sementara layar masih menampilkan baris lama. */
+    perbaruiTabel(false);
     perbaruiSemua(0);
     perbaruiTombolData();
+    gambarSebar();
+    gambarRpm();
     simpan();
-    aturPesan('Semua data dihapus.');
+    aturPesan(sedangBerjalan
+      ? 'Semua data dihapus. Percobaan yang sedang berjalan ikut dihentikan.'
+      : 'Semua data dihapus.');
   }
 
   /* --------------------------------------------------------------- tabel data */
@@ -451,6 +514,35 @@
     el.kartuBaris.textContent = 'Baris ke-' + b.no + ' dari ' + keadaan.data.length +
       '. Tekan Salin Tabel untuk menyalin seluruh baris sekaligus.';
     el.lapisKartu.hidden = false;
+    kunciLatar(true);
+    /* aria-modal hanya deklarasi; fokus harus benar-benar dipindahkan. */
+    el.kartuBesar.focus();
+  }
+
+  /* Kunci latar saat dialog terbuka: kontrol di belakang tidak dapat difokus
+     dan halaman tidak dapat digulir. */
+  function kunciLatar(aktif) {
+    var utama = document.querySelector('main');
+    var kepala = document.querySelector('header');
+    var isi = document.getElementById('isiRumus');
+    if (!utama || !kepala) { return; }
+    if (aktif) {
+      utama.setAttribute('inert', '');
+      kepala.setAttribute('inert', '');
+      document.body.style.overflow = 'hidden';
+    } else {
+      utama.removeAttribute('inert');
+      kepala.removeAttribute('inert');
+      document.body.style.overflow = '';
+    }
+  }
+
+  function tutupKartu() {
+    if (el.lapisKartu.hidden) { return; }
+    el.lapisKartu.hidden = true;
+    kunciLatar(false);
+    /* Kembalikan fokus ke tombol pembuka, bukan ke awal halaman. */
+    $('btnKartu').focus();
   }
 
   /* ------------------------------------------------------------------ grafik */
@@ -489,8 +581,8 @@
     ctx.lineTo(kanan, bawah);
     ctx.stroke();
 
-    ctx.fillStyle = '#7b8b99';
-    ctx.font = '11px system-ui, sans-serif';
+    ctx.fillStyle = '#5b6b7a';                    /* 5,38:1 - lolos WCAG */
+    ctx.font = '12px system-ui, sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
     for (var i = 0; i <= 5; i++) {
@@ -515,8 +607,8 @@
       ctx.stroke();
       ctx.fillText(Fisika.formatAngka(yv, yDesimal), kiri - 6, y);
     }
-    ctx.fillStyle = '#5b6b7a';
-    ctx.font = '600 11px system-ui, sans-serif';
+    ctx.fillStyle = '#44535f';                    /* 7,29:1 */
+    ctx.font = '600 12px system-ui, sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'bottom';
     ctx.fillText(xLabel, (kiri + kanan) / 2, bawah + 32);
@@ -558,7 +650,7 @@
 
     var yMaks = 0;
     keadaan.data.forEach(function (d) { yMaks = Math.max(yMaks, d[pilihan.y]); });
-    if (keadaan.garisModel) { yMaks = Math.max(yMaks, modelY(xMaks)); }
+    if (garisModelTampil()) { yMaks = Math.max(yMaks, modelY(xMaks)); }
     yMaks = pembulatanAtas(yMaks > 0 ? yMaks : 1);
     var yDesimal = pilihan.y === 'p' ? (yMaks < 10 ? 2 : 1) : 3;
 
@@ -568,9 +660,10 @@
     var px = function (x) { return kiri + (kanan - kiri) * (x / xMaks); };
     var py = function (y) { return bawah - (bawah - atas) * (y / yMaks); };
 
-    if (keadaan.garisModel) {
-      s.ctx.strokeStyle = '#9db4c6';
-      s.ctx.lineWidth = 2;
+    /* Garis model memakai warna lebih gelap agar lolos ambang kontras non-teks 3:1. */
+    if (garisModelTampil()) {
+      s.ctx.strokeStyle = '#7b8b99';
+      s.ctx.lineWidth = 2.5;
       s.ctx.setLineDash([6, 5]);
       s.ctx.beginPath();
       for (var i = 0; i <= 40; i++) {
@@ -582,8 +675,36 @@
       s.ctx.setLineDash([]);
     }
 
+    /* Titik yang berada di luar jangkauan preset aktif (mis. setelah skenario
+       diganti) TIDAK dipotong diam-diam: digambar sebagai panah di tepi bidang
+       dan dihitung di keterangan. Sebelumnya titik itu hilang dari grafik
+       padahal masih tercatat di tabel. */
+    var diLuar = [];
     keadaan.data.forEach(function (d) {
       var x = px(d[pilihan.x]), y = py(d[pilihan.y]);
+      var luarX = d[pilihan.x] > xMaks, luarY = d[pilihan.y] > yMaks;
+      if (luarX || luarY) {
+        diLuar.push(d);
+        var xTepi = Math.min(Math.max(x, kiri + 6), kanan - 6);
+        var yTepi = Math.min(Math.max(y, atas + 6), bawah - 6);
+        s.ctx.beginPath();
+        s.ctx.arc(xTepi, yTepi, 6, 0, Math.PI * 2);
+        s.ctx.fillStyle = d.warna;
+        s.ctx.fill();
+        s.ctx.strokeStyle = '#ffffff';
+        s.ctx.lineWidth = 1.6;
+        s.ctx.stroke();
+        /* panah kecil menunjuk arah keluarnya titik */
+        var ax = luarX ? (x > kanan ? -1 : 1) : 0;
+        var ay = luarY ? (y < atas ? 1 : -1) : 0;
+        s.ctx.beginPath();
+        s.ctx.moveTo(xTepi + ax * 9, yTepi + ay * 9);
+        s.ctx.lineTo(xTepi + ax * 16, yTepi + ay * 16);
+        s.ctx.strokeStyle = d.warna;
+        s.ctx.lineWidth = 2.5;
+        s.ctx.stroke();
+        return;
+      }
       s.ctx.beginPath();
       s.ctx.arc(x, y, 5.5, 0, Math.PI * 2);
       s.ctx.fillStyle = d.warna;
@@ -605,9 +726,13 @@
     } else {
       ket.push(keadaan.data.length + ' titik data.');
     }
-    if (keadaan.garisModel) {
+    if (diLuar.length) {
+      ket.push(diLuar.length + ' titik berada di luar jangkauan skenario ' +
+        presetKini().nama + ' (ditandai panah di tepi bidang).');
+    }
+    if (garisModelTampil()) {
       ket.push('Garis putus-putus = perhitungan model pada ' +
-        (pilihan.x === 'q' ? 'H = ' + Fisika.formatAngka(hAcu, 1) + ' m' : 'Q = ' + Fisika.formatAngka(qAcu, 2) + ' m³/s') +
+        (pilihan.x === 'q' ? 'tinggi jatuh air = ' + Fisika.formatAngka(hAcu, 1) + ' m' : 'debit = ' + Fisika.formatAngka(qAcu, 2) + ' m³/s') +
         (pilihan.y === 'e' ? ' dan t = ' + Fisika.formatAngka(tAcu, 0) + ' s' : '') +
         (xRef ? ' (data terakhir)' : ' (kondisi saat ini)') + '.');
     }
@@ -623,7 +748,9 @@
 
     var semua = keadaan.jejakRpm.slice();
     if (keadaan.titikSekarang.length) {
-      semua.push({ label: 'sedang berjalan', warna: WARNA[keadaan.data.length % WARNA.length],
+      /* Percobaan yang sedang berjalan memakai warna baris yang AKAN dipakai
+         saat dicatat (nomorData), supaya warna kurva = warna baris tabel. */
+      semua.push({ label: 'percobaan ini', warna: WARNA[keadaan.nomorData % WARNA.length],
                    titik: keadaan.titikSekarang, aktif: true });
     }
 
@@ -638,7 +765,7 @@
     yMaks = pembulatanAtas(yMaks);
 
     sumbu(s.ctx, kiri, atas, kanan, bawah, 0, xMaks, 0, yMaks,
-          'Waktu sejak Mulai (s)', 'Putaran (rpm)', 0, 0);
+          'Waktu sejak Mulai (s)', 'Putaran turbin (rpm)', 0, 0);
 
     var px = function (x) { return kiri + (kanan - kiri) * (x / xMaks); };
     var py = function (y) { return bawah - (bawah - atas) * (y / yMaks); };
@@ -646,8 +773,8 @@
     /* pita fase pemulihan putaran */
     s.ctx.fillStyle = 'rgba(217, 138, 31, .12)';
     s.ctx.fillRect(px(0), atas, px(K.fisika.detikMulai) - px(0), bawah - atas);
-    s.ctx.fillStyle = '#a8761a';
-    s.ctx.font = '600 10px system-ui, sans-serif';
+    s.ctx.fillStyle = '#8a5f10';                  /* 5,14:1 */
+    s.ctx.font = '600 11px system-ui, sans-serif';
     s.ctx.textAlign = 'center';
     s.ctx.textBaseline = 'top';
     if (px(K.fisika.detikMulai) - px(0) > 30) {
@@ -655,8 +782,8 @@
     }
 
     if (!semua.length) {
-      s.ctx.fillStyle = '#8fa0ae';
-      s.ctx.font = '12px system-ui, sans-serif';
+      s.ctx.fillStyle = '#5b6b7a';                /* 5,38:1 */
+      s.ctx.font = '13px system-ui, sans-serif';
       s.ctx.textAlign = 'center';
       s.ctx.textBaseline = 'middle';
       s.ctx.fillText('Grafik terisi saat percobaan berjalan.', (kiri + kanan) / 2, (atas + bawah) / 2);
@@ -692,6 +819,30 @@
     }
     ket.push('Fase pemulihan ' + K.fisika.detikMulai + ' detik tidak dihitung dalam energi.');
     $('ketGrafikRpm').textContent = ket.join(' ');
+
+    gambarLegendaRpm(semua);
+  }
+
+  /* Legenda jejak putaran. Ditempatkan di HTML, bukan digambar di kanvas, supaya
+     terbaca pembaca layar dan tidak menutupi area plot pada layar sempit.
+     Tanpa ini murid tidak tahu kurva pudar mana milik kondisi mana. */
+  function gambarLegendaRpm(semua) {
+    var wadah = $('legendaRpm');
+    if (!wadah) { return; }
+    wadah.innerHTML = '';
+    semua.forEach(function (j) {
+      if (!j.titik || j.titik.length < 2) { return; }
+      var li = document.createElement('li');
+      if (!j.aktif) { li.className = 'pudar'; }
+      var titik = document.createElement('span');
+      titik.className = 'legenda-titik';
+      titik.style.background = j.warna;
+      var teks = document.createElement('span');
+      teks.textContent = j.label;
+      li.appendChild(titik);
+      li.appendChild(teks);
+      wadah.appendChild(li);
+    });
   }
 
   /* ---------------------------------------------------------------- keluaran */
@@ -700,7 +851,13 @@
     var hasil = Fisika.hitung(q, h, keadaan.preset);
     $('nilaiDaya').textContent = Fisika.formatAngka(hasil.p, 2);
     $('nilaiEnergi').textContent = Fisika.formatAngka(keadaan.energi, 3);
-    $('nilaiRpm').textContent = Fisika.formatAngka(hasil.n, 0);
+    /* Saat berhenti, putaran yang tampil adalah nilai mantap (pratinjau).
+       Selama percobaan, pakai rpmTampil supaya angka mengikuti putaran roda
+       yang sebenarnya — termasuk saat masih menanjak di fase pemulihan. */
+    var nTampil = (keadaan.fase === 'mulai' || keadaan.fase === 'jalan' || keadaan.fase === 'jeda')
+      ? keadaan.rpmTampil
+      : hasil.n;
+    $('nilaiRpm').textContent = Fisika.formatAngka(nTampil, 0);
     $('nilaiWaduk').textContent = hasil.waduk.label;
     $('titikWaduk').style.background = hasil.waduk.warna;
 
@@ -728,8 +885,13 @@
     el.btnPause.textContent = keadaan.fase === 'jeda' ? 'Lanjut' : 'Jeda';
     el.btnUlangi.disabled = (keadaan.fase === 'siap' && keadaan.t === 0);
 
-    var bolehCatat = keadaan.t >= 1 && keadaan.fase !== 'mulai';
+    /* Satu percobaan = satu baris. Catat hanya boleh setelah percobaan selesai,
+       supaya setiap baris mewakili kondisi dengan durasi penuh dan energi
+       antar-baris tetap sebanding. Dua tombol (bilah kendali + panel) harus
+       selalu dalam keadaan sama. */
+    var bolehCatat = keadaan.fase === 'selesai';
     el.btnCatat.disabled = !bolehCatat;
+    if (el.btnCatatBilah) { el.btnCatatBilah.disabled = !bolehCatat; }
   }
 
   function perbaruiSemua(dt) {
@@ -750,9 +912,25 @@
   /* -------------------------------------------------------------- gelung utama */
   var sebelumnya = 0;
 
+  /* Preferensi sistem: kurangi gerak. Dibaca hidup supaya perubahan setelan
+     langsung berlaku tanpa memuat ulang halaman. */
+  var kueriGerak = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : null;
+  var gerakDikurangi = !!(kueriGerak && kueriGerak.matches);
+  if (kueriGerak && kueriGerak.addEventListener) {
+    kueriGerak.addEventListener('change', function (e) { gerakDikurangi = e.matches; });
+  } else if (kueriGerak && kueriGerak.addListener) {
+    kueriGerak.addListener(function (e) { gerakDikurangi = e.matches; });
+  }
+
   function gelung(sekarang) {
     var dt = sebelumnya ? Math.min(0.1, (sekarang - sebelumnya) / 1000) : 0;
     sebelumnya = sekarang;
+
+    /* dt = 0 berarti beku. Dipakai saat dijeda supaya animasi (roda, partikel,
+       hujan, gelombang) ikut berhenti, bukan hanya timer.
+       Fase 'siap' sengaja TIDAK dibekukan: saat berhenti, menggeser slider
+       harus langsung memperlihatkan perubahan kecepatan aliran (pratinjau). */
+    if (keadaan.fase === 'jeda') { dt = 0; }
 
     if (keadaan.fase === 'mulai') {
       var tr = jamRamp.nilai();
@@ -788,19 +966,32 @@
                   Fisika.formatAngka(keadaan.energi, 3) + ' kWh. Tekan Catat Data.', 'selesai');
         perbaruiKunci();
       }
-      if (keadaan.titikSekarang.length === 0 ||
-          t - keadaan.titikSekarang[keadaan.titikSekarang.length - 1].x > 0.08) {
-        keadaan.titikSekarang.push({ x: keadaan.tSejakMulai, n: keadaan.nKunci });
-        if (keadaan.titikSekarang.length > 1200) { keadaan.titikSekarang.shift(); }
-      }
     } else if (keadaan.fase === 'selesai') {
       keadaan.animasi = Math.max(0, keadaan.animasi - dt / 1.2);
       keadaan.rpmTampil = keadaan.nKunci * keadaan.animasi;
     }
 
-    perbaruiSemua(dt);
+    /* Rekam titik kurva putaran. Dikerjakan untuk semua fase percobaan dan
+       memakai x = tSejakMulai untuk SEMUA fase, supaya jarak antar titik
+       konsisten dan fase pemulihan ikut tergambar.
+       Sebelumnya titik hanya didorong saat fase 'jalan' dan membandingkan
+       t (0..durasi) dengan x (t + detikMulai), sehingga titik baru muncul
+       setiap ~2,1 detik dan kurva baru mulai di detik ke-2. */
+    if (keadaan.fase === 'mulai' || keadaan.fase === 'jalan') {
+      var xTitik = keadaan.tSejakMulai;
+      var terakhir = keadaan.titikSekarang[keadaan.titikSekarang.length - 1];
+      if (!terakhir || xTitik - terakhir.x > 0.08) {
+        keadaan.titikSekarang.push({ x: xTitik, n: keadaan.rpmTampil });
+        if (keadaan.titikSekarang.length > 1200) { keadaan.titikSekarang.shift(); }
+      }
+    }
 
-    if (keadaan.fase === 'jalan' || keadaan.fase === 'mulai') {
+    /* Hormati preferensi pengurangan gerak: dt = 0 membuat seluruh animasi
+       (roda, partikel, jet, gelombang, hujan) beku tanpa mematikan fungsi
+       lain. Angka panel dan timer tetap berjalan seperti biasa. */
+    perbaruiSemua(gerakDikurangi ? 0 : dt);
+
+    if (keadaan.fase === 'mulai' || keadaan.fase === 'jalan') {
       gambarRpm();
     }
 
@@ -813,6 +1004,7 @@
     el.btnPause.addEventListener('click', tekanJeda);
     el.btnUlangi.addEventListener('click', tekanUlangi);
     el.btnCatat.addEventListener('click', tekanCatat);
+    if (el.btnCatatBilah) { el.btnCatatBilah.addEventListener('click', tekanCatat); }
     el.btnHapus.addEventListener('click', tekanHapus);
 
     el.sliderQ.addEventListener('input', function () {
@@ -845,12 +1037,27 @@
     });
 
     $('btnKartu').addEventListener('click', bukaKartu);
-    $('btnTutupKartu').addEventListener('click', function () { el.lapisKartu.hidden = true; });
+    $('btnTutupKartu').addEventListener('click', tutupKartu);
     el.lapisKartu.addEventListener('click', function (e) {
-      if (e.target === el.lapisKartu) { el.lapisKartu.hidden = true; }
+      if (e.target === el.lapisKartu) { tutupKartu(); }
     });
     document.addEventListener('keydown', function (e) {
-      if (e.key === 'Escape' && !el.lapisKartu.hidden) { el.lapisKartu.hidden = true; }
+      if (el.lapisKartu.hidden) { return; }
+      if (e.key === 'Escape') { tutupKartu(); return; }
+      /* Jebakan fokus: Tab & Shift+Tab berputar hanya di dalam dialog. */
+      if (e.key !== 'Tab') { return; }
+      var fokusable = el.lapisKartu.querySelectorAll(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+      if (!fokusable.length) { return; }
+      var pertama = fokusable[0];
+      var terakhir = fokusable[fokusable.length - 1];
+      if (e.shiftKey && document.activeElement === pertama) {
+        e.preventDefault();
+        terakhir.focus();
+      } else if (!e.shiftKey && document.activeElement === terakhir) {
+        e.preventDefault();
+        pertama.focus();
+      }
     });
 
     $('btnSalin').addEventListener('click', function () {
@@ -889,12 +1096,14 @@
     el.kanvasSebar = $('kanvasSebar');
     el.kanvasRpm = $('kanvasRpm');
     el.lapisKartu = $('lapisKartu');
+    el.kartuBesar = el.lapisKartu.querySelector('.kartu-besar');
     el.kartuIsi = $('kartuIsi');
     el.kartuBaris = $('kartuBaris');
     el.btnStart = $('btnStart');
     el.btnPause = $('btnPause');
     el.btnUlangi = $('btnUlangi');
     el.btnCatat = $('btnCatat');
+    el.btnCatatBilah = $('btnCatatBilah');
     el.btnHapus = $('btnHapus');
 
     muat();
@@ -916,7 +1125,7 @@
     perbaruiSemua(0);
     gambarSebar();
     gambarRpm();
-    aturPesan('Atur debit dan head, lalu tekan Mulai.');
+    aturPesan('Atur debit dan tinggi jatuh air, lalu tekan Mulai.');
 
     pasangPeristiwa();
     requestAnimationFrame(gelung);
@@ -928,3 +1137,5 @@
     mulai();
   }
 })();
+
+

@@ -16,16 +16,22 @@
 var ModulPLTA = (function () {
   'use strict';
 
+  /* viewBox "0 50 1000 420": 50 unit langit teratas dipotong dan atap gedung
+     dinaikkan, supaya bagian mesin menempati ~52 % tinggi kanvas (sebelumnya
+     36 %, sehingga turbin — objek yang putarannya menjadi keluaran pengukuran —
+     justru paling kecil). Koordinat tetap absolut; viewBox hanya mengubah
+     jendela tampak. */
   var GEOM = {
-    lebar: 470,        // tinggi kanvas (viewBox 0 0 1000 470)
+    lebar: 420,        // tinggi kanvas (viewBox 0 50 1000 420)
+    atas: 50,          // tepi atas viewBox dalam koordinat SVG
     airKanan: 252,     // tepi kanan waduk = muka hilir bendung
     dasar: 470,
-    asalPipa: { x: 272, y: 373 },
-    kendaliPipa: { x: 430, y: 398 },
-    nosel: { x: 570, y: 415 },
-    turbin: { x: 665, y: 428, r: 40 },
-    generator: { x: 730, y: 380, w: 130, h: 54 },
-    gedung: { x1: 545, y1: 352, x2: 900, y2: 470, puncak: 300 }
+    asalPipa: { x: 272, y: 366 },
+    kendaliPipa: { x: 430, y: 390 },
+    nosel: { x: 570, y: 404 },
+    turbin: { x: 665, y: 412, r: 50 },
+    generator: { x: 730, y: 358, w: 130, h: 56 },
+    gedung: { x1: 545, y1: 320, x2: 900, y2: 470, puncak: 250 }
   };
 
   var JUMLAH_PARTIKEL_PIPA = 22;
@@ -72,22 +78,22 @@ var ModulPLTA = (function () {
           '<feGaussianBlur stdDeviation="9"/>' +
         '</filter>' +
       '</defs>' +
-      '<rect x="0" y="0" width="1000" height="470" fill="url(#plta-langit)"/>' +
+      '<rect x="0" y="50" width="1000" height="420" fill="url(#plta-langit)"/>' +
       /* matahari */
       '<g id="plta-matahari">' +
-        '<circle cx="112" cy="78" r="30" fill="#ffe89a" opacity=".85" filter="url(#plta-cahaya)"/>' +
-        '<circle cx="112" cy="78" r="21" fill="#ffd75e"/>' +
+        '<circle cx="112" cy="120" r="30" fill="#ffe89a" opacity=".85" filter="url(#plta-cahaya)"/>' +
+        '<circle cx="112" cy="120" r="21" fill="#ffd75e"/>' +
       '</g>' +
       /* awan */
       '<g id="plta-awan" fill="#ffffff">' +
-        '<ellipse cx="300" cy="96"  rx="62" ry="22"/>' +
-        '<ellipse cx="346" cy="82"  rx="42" ry="19"/>' +
-        '<ellipse cx="258" cy="84"  rx="34" ry="16"/>' +
-        '<ellipse cx="652" cy="72"  rx="70" ry="24"/>' +
-        '<ellipse cx="704" cy="58"  rx="46" ry="20"/>' +
-        '<ellipse cx="602" cy="60"  rx="38" ry="17"/>' +
-        '<ellipse cx="880" cy="112" rx="58" ry="21"/>' +
-        '<ellipse cx="922" cy="98"  rx="38" ry="17"/>' +
+        '<ellipse cx="300" cy="138" rx="62" ry="22"/>' +
+        '<ellipse cx="346" cy="124" rx="42" ry="19"/>' +
+        '<ellipse cx="258" cy="126" rx="34" ry="16"/>' +
+        '<ellipse cx="652" cy="114" rx="70" ry="24"/>' +
+        '<ellipse cx="704" cy="100" rx="46" ry="20"/>' +
+        '<ellipse cx="602" cy="102" rx="38" ry="17"/>' +
+        '<ellipse cx="880" cy="154" rx="58" ry="21"/>' +
+        '<ellipse cx="922" cy="140" rx="38" ry="17"/>' +
       '</g>' +
       /* hujan */
       '<g id="plta-hujan" stroke="#cfe3f2" stroke-width="1.6" stroke-linecap="round" opacity=".75"></g>';
@@ -95,10 +101,11 @@ var ModulPLTA = (function () {
 
   /* --------------------------------------------------------------- daratan */
   function bentukDaratan() {
-    /* Lereng kanan turun dari puncak bendung (252,132) ke dasar lembah.
-       Sisi tegak x = 252 dari y 132 sampai 470 adalah tubuh bendung, sehingga
-       muka air waduk selalu terkurung dan tidak pernah tampak melayang. */
-    return 'M 252 132 L 400 300 L 560 400 L 700 428 L 1000 432 L 1000 470 L 252 470 Z';
+    /* Lereng kanan turun dari puncak bendung (252,112) ke dasar lembah.
+       Sisi tegak x = 252 dari y 112 sampai 470 adalah tubuh bendung, sehingga
+       muka air waduk selalu terkurung dan tidak pernah tampak melayang.
+       Puncak dinaikkan dari 132 ke 112 agar sejajar dengan atap gedung baru. */
+    return 'M 252 112 L 400 292 L 560 388 L 700 414 L 1000 420 L 1000 470 L 252 470 Z';
   }
 
   /* ------------------------------------------------------------- bangunan */
@@ -112,25 +119,31 @@ var ModulPLTA = (function () {
         '<rect x="' + g.x1 + '" y="' + g.y1 + '" width="' + (g.x2 - g.x1) + '" height="' + (g.y2 - g.y1) +
           '" rx="4" fill="#eef3f7" stroke="#9fb0be" stroke-width="2"/>' +
       '</g>' +
-      /* generator */
+      /* generator. Label ditaruh di ATAS kotak (bukan di bawah) supaya tidak
+         berebut ruang dengan lampu indikator daya di bawahnya. */
       '<g>' +
         '<rect x="' + gn.x + '" y="' + gn.y + '" width="' + gn.w + '" height="' + gn.h +
           '" rx="7" fill="#f6d36b" stroke="#b08a1e" stroke-width="2"/>' +
         '<path d="M ' + (gn.x + 22) + ' ' + (gn.y + gn.h / 2) + ' q 14 -16 28 0 q 14 16 28 0 q 14 -16 28 0" ' +
           'fill="none" stroke="#8a6a12" stroke-width="3" stroke-linecap="round"/>' +
-        '<text x="' + (gn.x + gn.w / 2) + '" y="' + (gn.y + gn.h + 22) + '" text-anchor="middle" ' +
-          'font-size="11" font-weight="600" fill="#44535f">Generator</text>' +
+        '<text x="' + (gn.x + gn.w / 2) + '" y="' + (gn.y - 8) + '" text-anchor="middle" ' +
+          'font-size="12" font-weight="600" fill="#44535f">Generator</text>' +
       '</g>' +
-      /* lampu indikator daya */
+      /* Lampu indikator daya, dengan label di bawahnya. Ketiga lampu harus
+         sejajar; sebelumnya yang ketiga berbeda 4 unit sehingga tampak
+         miring. Dinaikkan ke cy 434 agar label (y 454) tidak menempel tepi
+         bawah gedung (470). */
       '<g id="plta-lampu">' +
-        '<circle cx="748" cy="462" r="7" fill="#cfd8e0" stroke="#9fb0be"/>' +
-        '<circle cx="776" cy="462" r="7" fill="#cfd8e0" stroke="#9fb0be"/>' +
-        '<circle cx="804" cy="462" r="7" fill="#cfd8e0" stroke="#9fb0be"/>' +
+        '<circle cx="748" cy="434" r="8" fill="#cfd8e0" stroke="#9fb0be"/>' +
+        '<circle cx="778" cy="434" r="8" fill="#cfd8e0" stroke="#9fb0be"/>' +
+        '<circle cx="808" cy="434" r="8" fill="#cfd8e0" stroke="#9fb0be"/>' +
       '</g>' +
+      '<text x="778" y="454" text-anchor="middle" font-size="12" font-weight="600" ' +
+        'fill="#44535f">Indikator daya</text>' +
       /* saluran keluar */
       '<g>' +
-        '<path d="M 900 436 L 1000 442 L 1000 470 L 900 470 Z" fill="url(#plta-air)" opacity=".85"/>' +
-        '<text x="990" y="430" text-anchor="end" font-size="11" font-weight="600" fill="#2f3d49">Saluran keluar</text>' +
+        '<path d="M 900 424 L 1000 430 L 1000 470 L 900 470 Z" fill="url(#plta-air)" opacity=".85"/>' +
+        '<text x="990" y="416" text-anchor="end" font-size="12" font-weight="600" fill="#2f3d49">Saluran keluar</text>' +
       '</g>';
   }
 
@@ -154,8 +167,10 @@ var ModulPLTA = (function () {
           sudu +
           '<circle cx="' + t.x + '" cy="' + t.y + '" r="11" fill="#5a6f80"/>' +
         '</g>' +
-        '<text x="' + (t.x - 74) + '" y="' + (t.y + 40) + '" text-anchor="middle" ' +
-          'font-size="11" font-weight="600" fill="#44535f">Turbin</text>' +
+        /* Label diletakkan di atas roda (y 412 - r 50 - 6 = 356), masih di dalam
+           gedung dan viewBox. Di bawah roda tidak muat: 412+50+8+16 = 486 > 470. */
+        '<text x="' + t.x + '" y="' + (t.y - t.r - 6) + '" text-anchor="middle" ' +
+          'font-size="12" font-weight="600" fill="#2f4a5e">Turbin</text>' +
       '</g>';
   }
 
@@ -174,14 +189,17 @@ var ModulPLTA = (function () {
         '<path d="' + d + '" fill="none" stroke="#6f8ba3" stroke-width="11" stroke-linecap="round"/>' +
         '<path id="plta-jalur-pipa" d="' + d + '" fill="none" stroke="none"/>' +
         '<g id="plta-partikel-pipa"></g>' +
-        '<text x="352" y="418" text-anchor="middle" font-size="11" font-weight="600" fill="#eef7ff">Pipa pesat</text>' +
+        /* Label diberi piring latar gelap agar tetap >= 4,5:1 di atas pipa. */
+        '<rect x="322" y="392" width="62" height="18" rx="4" fill="#41566b" opacity=".92"/>' +
+        '<text x="353" y="405" text-anchor="middle" font-size="12" font-weight="600" fill="#ffffff">Pipa pesat</text>' +
       '</g>' +
       /* struktur intake pada muka hulu bendung */
       '<g>' +
-        '<rect x="238" y="352" width="36" height="118" rx="4" fill="#9aa8b4" stroke="#78868f" stroke-width="2"/>' +
-        '<rect x="242" y="362" width="28" height="22" rx="3" fill="#2b3f52"/>' +
-        '<line x1="310" y1="344" x2="276" y2="372" stroke="#44535f" stroke-width="1.2"/>' +
-        '<text x="314" y="341" font-size="11" font-weight="600" fill="#eef7ff">Intake</text>' +
+        '<rect x="238" y="332" width="36" height="138" rx="4" fill="#9aa8b4" stroke="#78868f" stroke-width="2"/>' +
+        '<rect x="242" y="342" width="28" height="22" rx="3" fill="#2b3f52"/>' +
+        '<line x1="310" y1="324" x2="276" y2="352" stroke="#44535f" stroke-width="1.2"/>' +
+        '<rect x="286" y="308" width="50" height="18" rx="4" fill="#44535f" opacity=".92"/>' +
+        '<text x="311" y="321" text-anchor="middle" font-size="12" font-weight="600" fill="#ffffff">Intake</text>' +
       '</g>' +
       /* jet air dari nosel ke roda turbin */
       '<g id="plta-partikel-jet"></g>';
@@ -193,14 +211,19 @@ var ModulPLTA = (function () {
       '<path id="plta-badan-air" fill="url(#plta-air)"/>' +
       '<path id="plta-garis-air" fill="none" stroke="#bfe4f7" stroke-width="2.5" opacity=".9"/>' +
       '<line id="plta-garis-datar" stroke="#ffffff" stroke-width="1.5" stroke-dasharray="7 6" opacity=".55"/>' +
-      /* garis ukur head */
+      /* garis ukur tinggi jatuh air. Label diberi piring latar supaya kontrasnya
+         tidak bergantung pada warna gradien air di bawahnya (nilai lama 2,14:1). */
       '<g id="plta-ukur-h">' +
-        '<line id="plta-ukur-garis" stroke="#0d3b5c" stroke-width="2"/>' +
-        '<line id="plta-ukur-atas" stroke="#0d3b5c" stroke-width="2"/>' +
-        '<line id="plta-ukur-bawah" stroke="#0d3b5c" stroke-width="2"/>' +
-        '<text id="plta-ukur-teks" font-size="14" font-weight="700" fill="#0d3b5c">H</text>' +
+        '<line id="plta-ukur-garis" stroke="#ffffff" stroke-width="2"/>' +
+        '<line id="plta-ukur-atas" stroke="#ffffff" stroke-width="2"/>' +
+        '<line id="plta-ukur-bawah" stroke="#ffffff" stroke-width="2"/>' +
+        '<rect id="plta-ukur-piring" x="0" y="0" width="112" height="22" rx="4" ' +
+          'fill="#ffffff" opacity=".88"/>' +
+        '<text id="plta-ukur-teks" font-size="13.5" font-weight="700" fill="#0d3b5c">H</text>' +
       '</g>' +
-      '<text x="16" y="458" font-size="12" font-weight="700" fill="#eaf6ff">Waduk</text>';
+      /* Label waduk: putih di atas piring gelap agar >= 4,5:1 (nilai lama 4,07:1). */
+      '<rect x="10" y="443" width="58" height="20" rx="4" fill="#0d3b5c" opacity=".82"/>' +
+      '<text x="16" y="458" font-size="12" font-weight="700" fill="#ffffff">Waduk</text>';
   }
 
   function jalurGelombang(kanan, y, amp, fase) {
@@ -216,7 +239,7 @@ var ModulPLTA = (function () {
   function bangun(container) {
     wadah = container;
     var svg =
-      '<svg viewBox="0 0 1000 470" preserveAspectRatio="xMidYMid meet" role="img" ' +
+      '<svg viewBox="0 50 1000 420" preserveAspectRatio="xMidYMid meet" role="img" ' +
         'aria-label="Potongan melintang PLTA: waduk, pipa pesat, turbin, dan generator">' +
         bangunLangit() +
         '<path d="' + bentukDaratan() + '" fill="url(#plta-tanah)"/>' +
@@ -246,6 +269,7 @@ var ModulPLTA = (function () {
       garis: container.querySelector('#plta-ukur-garis'),
       atas: container.querySelector('#plta-ukur-atas'),
       bawah: container.querySelector('#plta-ukur-bawah'),
+      piring: container.querySelector('#plta-ukur-piring'),
       teks: container.querySelector('#plta-ukur-teks')
     };
 
@@ -277,7 +301,9 @@ var ModulPLTA = (function () {
     for (var k = 0; k < JUMLAH_TETES; k++) {
       var ln = document.createElementNS('http://www.w3.org/2000/svg', 'line');
       ln.setAttribute('y2', '14');
-      var t = { node: ln, x: Math.random() * 1000, y: Math.random() * 470, v: 420 + Math.random() * 260 };
+      /* Ekor tetes 14 unit, jadi titik lahir dibatasi 56..454 agar ujung ekor
+         (y + 14) tidak melewati tepi bawah viewBox 470. */
+      var t = { node: ln, x: 4 + Math.random() * 992, y: 56 + Math.random() * 398, v: 420 + Math.random() * 260 };
       ln.setAttribute('x1', t.x.toFixed(1));
       ln.setAttribute('y1', t.y.toFixed(1));
       ln.setAttribute('x2', (t.x - 3).toFixed(1));
@@ -334,6 +360,12 @@ var ModulPLTA = (function () {
     el.ukur.teks.setAttribute('y', ((ya + yb) / 2 + 5).toFixed(1));
     el.ukur.teks.setAttribute('text-anchor', 'end');
     el.ukur.teks.textContent = 'H = ' + angka(k.h, 1) + ' m';
+    /* Piring latar mengikuti posisi teks. Lebar piring konstan (112) dengan
+       ujung kanan menempel ke teks, sehingga teks tetap terbaca di gradien air. */
+    if (el.ukur.piring) {
+      el.ukur.piring.setAttribute('x', String(xt - 10 - 104));
+      el.ukur.piring.setAttribute('y', (parseFloat(((ya + yb) / 2 + 5).toFixed(1)) - 16).toFixed(1));
+    }
 
     /* ---- partikel air di dalam pipa : v = Q/A ---- */
     var pxPerDetik = k.vPipa * 110 * KONFIG.kecepatanAnimasi;
@@ -381,7 +413,9 @@ var ModulPLTA = (function () {
       for (var t2 = 0; t2 < tetes.length; t2++) {
         var d = tetes[t2];
         d.y += d.v * dt;
-        if (d.y > 480) { d.y = -20; d.x = Math.random() * 1000; }
+        /* Daur ulang setelah ekor keluar viewBox (470). Titik lahir baru 52
+           sehingga ekor (52+14=66) tetap di dalam area yang terlihat. */
+        if (d.y > 456) { d.y = 52; d.x = 4 + Math.random() * 992; }
         d.node.setAttribute('x1', d.x.toFixed(1));
         d.node.setAttribute('y1', d.y.toFixed(1));
         d.node.setAttribute('x2', (d.x - 3).toFixed(1));
