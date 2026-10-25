@@ -9,7 +9,16 @@
         (performance.now), bukan jumlah bingkai, supaya tidak melenceng
         ketika bingkai tersendat.
      3. Fase pemulihan putaran (2 detik) berlangsung sebelum timer mulai,
-        sehingga energi hanya dihitung selama selang yang tercatat.
+        sehingga energi hanya dihitung selama selang yang tercatat. Selama
+        fase itu daya dan energi ditampilkan "—", bukan angka penuh, karena
+        generator belum mencapai kondisi mantapnya.
+     4. Durasi dikunci begitu ada satu baris data. Energi baru sebanding
+        antar-baris bila durasinya sama; mengubah durasi di tengah sesi akan
+        membuat kWh dari percobaan berbeda tidak bisa dibandingkan.
+     5. Garis model pada grafik sebar hanya sah untuk SATU nilai besaran yang
+        tidak dipakai sebagai sumbu-x. Keterangannya menyebut nilai itu dan
+        berapa titik yang benar-benar dilaluinya — tidak diam-diam memakai
+        baris terakhir seolah-olah semua titik satu kondisi.
    ========================================================================= */
 (function () {
   'use strict';
@@ -107,6 +116,14 @@
     return keadaan.garisModel && keadaan.data.length > 0;
   }
 
+  /* Durasi terkunci setelah baris pertama tercatat. Alasannya bukan kekakuan
+     teknis, melainkan kesetaraan: energi (kWh) hanya bisa dibandingkan antar
+     baris bila selang waktunya sama. Terkunci sampai data dihapus — persis
+     cermin dari cara preset dikunci selama satu percobaan. */
+  function durasiTerkunci() {
+    return keadaan.data.length > 0;
+  }
+
   /* ------------------------------------------------------------- simpan/muat */
   function simpan() {
     try {
@@ -156,7 +173,7 @@
       b.setAttribute('aria-pressed', p.id === keadaan.preset ? 'true' : 'false');
       b.dataset.preset = p.id;
       b.innerHTML = '<strong>' + p.nama + '</strong><span>Q maks ' + Fisika.formatAngka(p.qMaks, 2) +
-                    ' m³/s<br>H maks ' + Fisika.formatAngka(p.hMaks, 1) + ' m</span>';
+                    ' m³/s</span>';
       b.addEventListener('click', function () { pilihPreset(p.id); });
       wadah.appendChild(b);
     });
@@ -174,7 +191,9 @@
       b.dataset.durasi = String(d);
       b.textContent = d + ' s';
       b.addEventListener('click', function () {
-        if (balikkan()) { return; }
+        /* Durasi ikut dikunci begitu ada baris data: lihat perbaruiKunci().
+           Penjagaan di sini hanya jaring pengaman untuk klik programatik. */
+        if (balikkan() || durasiTerkunci()) { return; }
         keadaan.durasi = d;
         bangunDurasi();
         perbaruiTimer();
@@ -296,7 +315,7 @@
     keadaan.animasi = 1;
     keadaan.qKunci = keadaan.q;
     keadaan.hKunci = keadaan.h;
-    var hasil = Fisika.hitung(keadaan.qKunci, keadaan.hKunci, keadaan.preset);
+    var hasil = Fisika.hitung(keadaan.qKunci, keadaan.hKunci);
     keadaan.pKunci = hasil.p;
     keadaan.nKunci = hasil.n;
     keadaan.titikSekarang = [{ x: 0, n: 0 }];
@@ -533,8 +552,8 @@
     var meta = [];
     meta.push('# Simulasi Pembangkit Listrik Tenaga Air — data percobaan');
     meta.push('# Skenario aktif: ' + namaSekarang +
-      ' (debit maks ' + Fisika.formatAngka(presetKini().qMaks, 2) + ' m³/s, ' +
-      'tinggi jatuh maks ' + Fisika.formatAngka(presetKini().hMaks, 1) + ' m)');
+      ' (debit maks ' + Fisika.formatAngka(presetKini().qMaks, 2) + ' m³/s; ' +
+      'tinggi jatuh air 4–' + Fisika.formatAngka(K.rentang.hMaks, 0) + ' m, sifat situs)');
     meta.push('# Durasi target per percobaan: ' + keadaan.durasi + ' s');
     meta.push('# Tanggal unduh: ' + capWaktuBaca(kini));
     meta.push('# Kelompok: ' + '____________________');
@@ -691,10 +710,33 @@
     if (kanan <= kiri || bawah <= atas) { return; }
 
     var b = batasKini();
-    var xRef = keadaan.data.length ? keadaan.data[keadaan.data.length - 1] : null;
-    var hAcu = xRef ? xRef.h : hEfektif();
-    var qAcu = xRef ? xRef.q : qEfektif();
-    var tAcu = xRef ? xRef.t : Math.max(keadaan.t, keadaan.durasi);
+
+    /* ------------------------------------------------- garis model sebar ----
+       Garis model adalah grafik P(Q) atau P(H) pada kondisi LAIN yang tetap.
+       Karena itu ia hanya sah bila seluruh titik data memakai nilai besaran
+       lainnya yang sama. Versi lama mengambil nilai dari baris data TERAKHIR
+       dan menggambar garisnya untuk semua titik — kurva yang benar secara
+       hitungan tetapi tidak mewakili satu pun titik di sebelah kirinya, dan
+       keterangannya hanya menyebut "(data terakhir)". Sekarang: hitung nilai
+       yang berbeda; bila lebih dari satu, garis TIDAK digambar dan alasannya
+       ditulis. Menarik garis yang tidak berlaku lebih buruk daripada tidak
+       menggambar apa pun. */
+    var sumbuX = pilihan.x;                 // 'q' atau 'h'
+    var lain = sumbuX === 'q' ? 'h' : 'q';
+    var nilaiLain = {};
+    var nilaiDurasi = {};
+    keadaan.data.forEach(function (d) {
+      nilaiLain[Fisika.bulatkan(d[lain], 2)] = true;
+      if (pilihan.y === 'e') { nilaiDurasi[Fisika.bulatkan(d.t, 2)] = true; }
+    });
+    var daftarLain = Object.keys(nilaiLain).map(Number).sort(function (a, c) { return a - c; });
+    var daftarDurasi = Object.keys(nilaiDurasi).map(Number).sort(function (a, c) { return a - c; });
+    var seragam = daftarLain.length === 1 && daftarDurasi.length <= 1;
+
+    var hAcu = sumbuX === 'q' ? (seragam ? daftarLain[0] : hEfektif()) : hEfektif();
+    var qAcu = sumbuX === 'h' ? (seragam ? daftarLain[0] : qEfektif()) : qEfektif();
+    var tAcu = daftarDurasi.length ? daftarDurasi[0] : Math.max(keadaan.t, keadaan.durasi);
+    var garisTampil = garisModelTampil() && seragam;
 
     var xMaks = pilihan.x === 'q' ? b.qMaks : b.hMaks;
     var xDesimal = pilihan.x === 'q' ? 2 : 1;
@@ -712,7 +754,7 @@
 
     var yMaks = 0;
     keadaan.data.forEach(function (d) { yMaks = Math.max(yMaks, d[pilihan.y]); });
-    if (garisModelTampil()) { yMaks = Math.max(yMaks, modelY(xMaks)); }
+    if (garisTampil) { yMaks = Math.max(yMaks, modelY(xMaks)); }
     yMaks = pembulatanAtas(yMaks > 0 ? yMaks : 1);
     var yDesimal = pilihan.y === 'p' ? (yMaks < 10 ? 2 : 1) : 3;
 
@@ -723,7 +765,7 @@
     var py = function (y) { return bawah - (bawah - atas) * (y / yMaks); };
 
     /* Garis model memakai warna lebih gelap agar lolos ambang kontras non-teks 3:1. */
-    if (garisModelTampil()) {
+    if (garisTampil) {
       s.ctx.strokeStyle = '#7b8b99';
       s.ctx.lineWidth = 2.5;
       s.ctx.setLineDash([6, 5]);
@@ -792,11 +834,36 @@
       ket.push(diLuar.length + ' titik berada di luar jangkauan skenario ' +
         presetKini().nama + ' (ditandai panah di tepi bidang).');
     }
-    if (garisModelTampil()) {
+    /* Grafik energi sengaja dipertahankan walau bentuknya pasti menyerupai
+       grafik daya: E = P x t dengan t sama untuk semua titik, jadi kurvanya
+       hanya beda skala sumbu tegak. Murid yang menyadari hal ini sedang
+       menguji pemahamannya sendiri, bukan menemukan cacat alat. Nyatakan
+       terang-terangan supaya tidak ada yang menyimpulkan grafiknya salah. */
+    if (pilihan.y === 'e' && keadaan.data.length) {
+      ket.push('Energi = daya x durasi, dan durasinya sama untuk semua titik, ' +
+        'jadi bentuk grafik ini memang sama dengan grafik dayanya; hanya skala ' +
+        'sumbu tegaknya yang berbeda sebesar faktor durasi.');
+    }
+    if (garisTampil) {
       ket.push('Garis putus-putus = perhitungan model pada ' +
         (pilihan.x === 'q' ? 'tinggi jatuh air = ' + Fisika.formatAngka(hAcu, 1) + ' m' : 'debit = ' + Fisika.formatAngka(qAcu, 2) + ' m³/s') +
         (pilihan.y === 'e' ? ' dan t = ' + Fisika.formatAngka(tAcu, 0) + ' s' : '') +
-        (xRef ? ' (data terakhir)' : ' (kondisi saat ini)') + '.');
+        ', yaitu kondisi yang sama untuk semua titik ini.');
+    } else if (keadaan.garisModel && keadaan.data.length) {
+      /* Garis tidak digambar karena titik-titiknya tidak satu kondisi. Diam
+         saja akan membuat murid mengira centangnya rusak; sebutkan sebabnya
+         dan apa yang harus dilakukan. */
+      var sebab = [];
+      if (daftarLain.length > 1) {
+        sebab.push(daftarLain.length + ' nilai ' + (sumbuX === 'q' ? 'tinggi jatuh air' : 'debit') + ' berbeda');
+      }
+      if (daftarDurasi.length > 1) {
+        sebab.push(daftarDurasi.length + ' durasi berbeda');
+      }
+      ket.push('Garis model tidak digambar karena titik-titik ini berasal dari ' +
+        sebab.join(' dan ') + '. Garis model hanya sah bila kondisi lainnya seragam: ' +
+        'buat titik-titik dengan ' + (sumbuX === 'q' ? 'tinggi jatuh air' : 'debit') +
+        ' yang sama' + (pilihan.y === 'e' ? ' dan durasi yang sama' : '') + '.');
     }
     $('ketGrafikSebar').textContent = ket.join(' ');
   }
@@ -910,9 +977,15 @@
   /* ---------------------------------------------------------------- keluaran */
   function perbaruiKeluaran() {
     var q = qEfektif(), h = hEfektif();
-    var hasil = Fisika.hitung(q, h, keadaan.preset);
-    $('nilaiDaya').textContent = Fisika.formatAngka(hasil.p, 2);
-    $('nilaiEnergi').textContent = Fisika.formatAngka(keadaan.energi, 3);
+    var hasil = Fisika.hitung(q, h);
+    /* Selama fase pemulihan, daya listrik belum mencapai kondisi mantapnya:
+       putaran masih menanjak dari nol dan generator belum mengikuti. Menampilkan
+       angka penuh di sini akan membuat murid membaca "daya sudah ada padahal
+       roda baru berputar lambat". Karena itu daya dan energi ditampilkan "—"
+       sampai fase 'jalan' dimulai; nilai mantapnya baru sah saat itu. */
+    var mantap = !(keadaan.fase === 'mulai');
+    $('nilaiDaya').textContent = mantap ? Fisika.formatAngka(hasil.p, 2) : '—';
+    $('nilaiEnergi').textContent = mantap ? Fisika.formatAngka(keadaan.energi, 3) : '—';
     /* Saat berhenti, putaran yang tampil adalah nilai mantap (pratinjau).
        Selama percobaan, pakai rpmTampil supaya angka mengikuti putaran roda
        yang sebenarnya — termasuk saat masih menanjak di fase pemulihan. */
@@ -920,17 +993,23 @@
       ? keadaan.rpmTampil
       : hasil.n;
     $('nilaiRpm').textContent = Fisika.formatAngka(nTampil, 0);
-    /* Nilai ini BUKAN besaran yang diukur: ia perbandingan tinggi jatuh yang
-       diatur murid terhadap batas maksimum skenario yang dipilih. Label dibuat
-       eksplisit ("75 % · Normal") supaya tidak terbaca sebagai hasil pengukuran
-       waduk. Lihat keputusan #9. */
-    var persen = hasil.waduk.rasio * 100;
-    $('nilaiWaduk').textContent = Fisika.formatAngka(persen, 0) + ' % · ' + hasil.waduk.label;
-    $('titikWaduk').style.background = hasil.waduk.warna;
-    $('catatanEnergi').textContent =
-      'Tinggi jatuh air yang kamu atur = ' + Fisika.formatAngka(persen, 0) +
-      ' % dari maksimum skenario ' + presetKini().nama +
-      '. Ini perbandingan, bukan hasil pengukuran waduk. Energi = daya × durasi berjalan.';
+
+    /* Baris ini BUKAN besaran yang diukur: tinggi jatuh air adalah sifat situs
+       yang diatur murid, dan persennya dibandingkan terhadap 25 m (maksimum
+       situs), bukan terhadap batas skenario. Tidak ada lagi kosakata "waduk",
+       karena waduk tidak punya ketinggian sendiri di dalam model ini. */
+    var head = hasil.head;
+    $('nilaiHead').textContent =
+      Fisika.formatAngka(h, 1) + ' m · ' + Fisika.formatAngka(head.persen, 0) +
+      ' % dari maksimum situs';
+    var catatan = [];
+    if (hasil.qLimpas > 0.0001) {
+      catatan.push('Debit ' + Fisika.formatAngka(q, 2) + ' m³/s melebihi kapasitas turbin ' +
+        Fisika.formatAngka(K.fisika.qKapasitas, 2) + ' m³/s: ' +
+        Fisika.formatAngka(hasil.qLimpas, 2) + ' m³/s melimpas dan tidak menambah daya.');
+    }
+    catatan.push('Energi = daya × durasi berjalan.');
+    $('catatanEnergi').textContent = catatan.join(' ');
   }
 
   function perbaruiTimer() {
@@ -945,7 +1024,22 @@
     el.sliderQ.disabled = kunciPenuh;
     el.sliderH.disabled = kunciPenuh;
     Array.prototype.forEach.call(document.querySelectorAll('.preset'), function (b) { b.disabled = kunciPenuh; });
-    Array.prototype.forEach.call(document.querySelectorAll('.durasi'), function (b) { b.disabled = kunciPenuh; });
+
+    /* Durasi punya dua alasan terkunci, dan keduanya berbeda:
+       - selama percobaan berjalan, karena durasi adalah bagian dari kondisi
+         yang sedang diukur;
+       - setelah ada data, karena energi antar-baris hanya sebanding bila
+         selang waktunya sama. Terkunci sampai data dihapus. */
+    var kunciDurasi = kunciPenuh || durasiTerkunci();
+    Array.prototype.forEach.call(document.querySelectorAll('.durasi'), function (b) { b.disabled = kunciDurasi; });
+    var ketDurasi = $('ketDurasi');
+    if (ketDurasi) {
+      ketDurasi.textContent = durasiTerkunci()
+        ? 'Durasi terkunci di ' + keadaan.durasi + ' s karena sudah ada data. Energi hanya bisa ' +
+          'dibandingkan bila durasinya sama. Hapus semua data untuk memilih durasi lain.'
+        : 'Semua kelompok memakai durasi yang sama supaya energi (kWh) bisa dibandingkan. ' +
+          'Durasi terkunci setelah data pertama dicatat.';
+    }
 
     el.btnStart.disabled = (keadaan.fase === 'mulai' || keadaan.fase === 'jalan');
     el.btnPause.disabled = !kunci;
@@ -963,7 +1057,7 @@
 
   function perbaruiSemua(dt) {
     var q = qEfektif(), h = hEfektif();
-    var hasil = Fisika.hitung(q, h, keadaan.preset);
+    var hasil = Fisika.hitung(q, h);
     ModulPLTA.perbarui({
       q: q, h: h,
       vPipa: hasil.vPipa,

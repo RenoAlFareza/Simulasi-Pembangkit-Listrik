@@ -67,8 +67,8 @@
           <span class="keluaran-nilai"><span id="nilaiRpm">0</span> <em>rpm</em></span>
         </div>
         <div class="keluaran">
-          <span class="keluaran-label">Tinggi jatuh relatif</span>
-          <span class="keluaran-nilai kecil"><span class="titik" id="titikWaduk"></span><span id="nilaiWaduk">Normal</span></span>
+          <span class="keluaran-label">Tinggi jatuh air</span>
+          <span class="keluaran-nilai kecil"><span id="nilaiHead">15,0 m · 60 % dari maksimum situs</span></span>
         </div>
       </div>
       <p class="catatan-kecil" id="catatanEnergi">Energi dihitung dari durasi percobaan yang sedang berjalan.</p>
@@ -104,7 +104,7 @@
       <div class="pengatur">
         <div class="pengatur-kepala"><span class="label-durasi">Durasi percobaan</span></div>
         <div class="pilih-durasi" id="pilihDurasi"></div>
-        <p class="catatan-kecil">Semua kelompok memakai durasi yang sama supaya energi (kWh) bisa dibandingkan.</p>
+        <p class="catatan-kecil" id="ketDurasi">Semua kelompok memakai durasi yang sama supaya energi (kWh) bisa dibandingkan. Durasi terkunci setelah data pertama dicatat.</p>
       </div>
     </section>
   </aside>
@@ -169,21 +169,25 @@
     </button>
     <div class="isi-rumus" id="isiRumus" hidden>
       <p>Daya yang tersedia pada air yang mengalir dari ketinggian H:</p>
-      <p class="rumus">P<sub>air</sub> = ρ · g · Q · H</p>
+      <p class="rumus">P<sub>air</sub> = ρ · g · Q<sub>turbin</sub> · H</p>
       <p>Daya listrik yang benar-benar dihasilkan setelah kerugian gesekan, turbulensi, turbin, dan generator:</p>
-      <p class="rumus">P<sub>keluaran</sub> = η · ρ · g · Q · H</p>
+      <p class="rumus">P<sub>keluaran</sub> = η · ρ · g · Q<sub>turbin</sub> · H</p>
       <p>Energi listrik yang dihasilkan selama percobaan berlangsung t detik:</p>
       <p class="rumus">E = P<sub>keluaran</sub> × t &nbsp;&nbsp; dengan t dalam jam</p>
       <p>Putaran turbin pada sistem ini:</p>
-      <p class="rumus">n = n₀ · √( (Q · H) / (Q₀ · H₀) )</p>
+      <p class="rumus">n = n₀ · √( (Q<sub>turbin</sub> · H) / (Q₀ · H₀) )</p>
+      <p class="rumus">Q<sub>turbin</sub> = nilai terkecil dari Q dan Q<sub>kapasitas</sub></p>
       <ul class="daftar-nilai">
         <li>ρ = 1000 kg/m³ &nbsp;·&nbsp; g = 9,81 m/s²</li>
-        <li>η = 0,75 (75 %) — efisiensi sistem, nilai tetap untuk alat ini</li>
+        <li>η = 0,75 (75 %) — efisiensi sistem pada titik beban acuan; nilainya tetap, dan
+          kemungkinan melampaui kapasitas turbin sudah ditutup oleh Q<sub>kapasitas</sub></li>
+        <li>Q<sub>kapasitas</sub> = 0,40 m³/s — debit terbesar yang bisa dilewatkan turbin</li>
         <li>n₀ = 900 rpm pada Q₀ = 0,30 m³/s dan H₀ = 15 m</li>
       </ul>
       <p class="catatan-kecil">Debit Q dan tinggi jatuh air (head) H adalah dua besaran yang kamu ubah. Perhatikan
         besaran mana yang
-        berbanding lurus dan mana yang tidak, lalu bandingkan dengan data yang kamu kumpulkan.</p>
+        berbanding lurus dan mana yang tidak, lalu bandingkan dengan data yang kamu kumpulkan.
+        Debit di atas 0,40 m³/s tidak menambah daya maupun putaran — airnya melimpas.</p>
     </div>
   </section>
 

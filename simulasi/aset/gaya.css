@@ -9,7 +9,7 @@
   --biru-muda:   #e3f0fc;
   /* Hijau & jingga digelapkan agar lolos kontras WCAG AA. Nilai lama
      #1f9d55 (putih di atasnya 3,49:1) dan #d98a1f (2,76:1) gagal pada
-     tombol "Catat Data", teks status selesai, dan penanda kondisi waduk. */
+     tombol "Catat Data" dan teks status selesai. */
   --hijau:       #157a43;   /* putih di atasnya 5,39:1 */
   --merah:       #c0392b;
   --jingga:      #8a5f10;   /* putih di atasnya 5,64:1 */
@@ -243,10 +243,6 @@ h1, h2 { margin: 0; font-weight: 650; }
 }
 .keluaran-nilai em { font-size: .7rem; font-weight: 600; font-style: normal; color: var(--tinta-lemah); }
 .keluaran-nilai.kecil { font-size: 1rem; }
-.titik {
-  width: 11px; height: 11px; border-radius: 50%;
-  background: var(--biru); flex: none;
-}
 
 /* preset */
 .daftar-preset { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }

@@ -7,22 +7,31 @@
    ========================================================================= */
 var KONFIG = {
 
-  versi: '0.1.0',
+  versi: '0.2.0',
   modulAktif: 'plta',
 
   /* --- model fisis ------------------------------------------------------ */
   fisika: {
     rho: 1000,        // kg/m3   massa jenis air
     g: 9.81,          // m/s2    percepatan gravitasi
-    eta: 0.75,        // -       efisiensi sistem gabungan
+    eta: 0.75,        // -       efisiensi sistem PADA TITIK BEBAN ACUAN, bukan
+                      //         efisiensi turbin pada semua beban. Konstannya
+                      //         dibayar dengan membatasi kapasitas turbin di
+                      //         bawah, bukan dengan membuat η melengkung.
     rpmAcuan: 900,    // rpm     putaran pada kondisi acuan
     qAcuan: 0.30,     // m3/s    debit acuan
     hAcuan: 15,       // m       head acuan
     detikMulai: 2,    // s       fase turbin berputar naik sebelum timer jalan
-    luasPipa: 0.28    // m2      luas penampang pipa pesat (diameter tetap)
+    luasPipa: 0.28,   // m2      luas penampang pipa pesat (diameter tetap)
+    qKapasitas: 0.40  // m3/s    debit maksimum yang bisa dilewatkan turbin.
+                      //         Air di atas batas ini melimpas (spill): tidak
+                      //         menambah daya listrik dan tidak menambah putaran.
   },
 
-  /* --- rentang pengatur ------------------------------------------------ */
+  /* --- rentang pengatur ------------------------------------------------
+     Head adalah sifat SITUS (tinggi bendung dan topografi), bukan sifat musim:
+     rentang 4–25 m terbuka penuh di semua skenario cuaca. Cuaca hanya mengubah
+     ketersediaan debit.                                                      */
   rentang: {
     qMin: 0.05, qMaks: 0.60, qLangkah: 0.01,   // m3/s
     hMin: 4,    hMaks: 25,   hLangkah: 0.5     // m
@@ -40,55 +49,49 @@ var KONFIG = {
   garisModelBawaan: true,      // tampilkan garis model pada grafik sebar
   rumusTerbukaBawaan: false,   // panel rumus mulai dalam keadaan tertutup
 
-  /* --- ambang kondisi waduk (bagian dari H_maks preset) ----------------
-     Warna dot disesuaikan agar lolos ambang kontras non-teks 3:1 terhadap
-     latar panel (#eef3f8). Nilai lama #2b7fd4 (3,70:1) dan #d98a1f (2,47:1). */
-  ambangWaduk: [
-    { min: 0.90, label: 'Penuh',  warna: '#157a43' },  /* 4,83:1 */
-    { min: 0.50, label: 'Normal', warna: '#1c62a8' },  /* 5,60:1 */
-    { min: 0.25, label: 'Rendah', warna: '#8a5f10' },  /* 5,64:1 */
-    { min: 0.00, label: 'Kritis', warna: '#c0392b' }   /* 4,87:1 */
-  ],
-
-  /* --- preset skenario lingkungan -------------------------------------- */
-  /* Mengubah tampilan DAN menetapkan ketersediaan air. Satu preset dipakai
-     untuk satu aktivitas, sehingga tidak menjadi variabel pengganggu.      */
+  /* --- preset skenario lingkungan --------------------------------------
+     Preset HANYA mengubah dua hal: ketersediaan debit (qMaks) dan tampilan
+     visual (langit, matahari, awan, hujan, gelombang). Preset TIDAK membatasi
+     tinggi jatuh air — head sifat situs, 4–25 m terbuka di semua preset.
+     Satu preset dipakai untuk satu aktivitas, sehingga tidak menjadi variabel
+     pengganggu. Kalimat keterangan hanya boleh menyebut debit dan langit;
+     menyebut "muka waduk surut" akan salah setelah head lepas dari cuaca.   */
   preset: [
     {
       id: 'kemarau',
       nama: 'Kemarau',
-      qMaks: 0.20, hMaks: 12,
+      qMaks: 0.20,
       langitAtas: '#a8d8f0', langitBawah: '#f7ecc8',
       matahari: true, awan: 0.10, hujan: false,
       gelombangAmp: 1.6, gelombangPeriode: 5.0,
-      keterangan: 'Musim kering. Air sedikit, muka waduk surut.'
+      keterangan: 'Musim kering. Persediaan air paling sedikit; langit cerah.'
     },
     {
       id: 'cerah',
       nama: 'Cerah',
-      qMaks: 0.40, hMaks: 20,
+      qMaks: 0.40,
       langitAtas: '#7cc2ea', langitBawah: '#dff2fb',
       matahari: true, awan: 0.35, hujan: false,
       gelombangAmp: 2.4, gelombangPeriode: 3.6,
-      keterangan: 'Kondisi biasa. Debit dan tinggi jatuh air sedang.'
+      keterangan: 'Cuaca cerah berawan. Persediaan air sedang.'
     },
     {
       id: 'mendung',
       nama: 'Mendung',
-      qMaks: 0.50, hMaks: 22,
+      qMaks: 0.50,
       langitAtas: '#8e9aa6', langitBawah: '#c8ced4',
       matahari: false, awan: 0.85, hujan: false,
       gelombangAmp: 3.2, gelombangPeriode: 2.8,
-      keterangan: 'Menuju musim basah. Air mulai bertambah.'
+      keterangan: 'Langit mendung. Persediaan air mulai bertambah.'
     },
     {
       id: 'hujan',
       nama: 'Hujan',
-      qMaks: 0.60, hMaks: 25,
+      qMaks: 0.60,
       langitAtas: '#5d6b78', langitBawah: '#9aa6b0',
       matahari: false, awan: 1.00, hujan: true,
       gelombangAmp: 4.2, gelombangPeriode: 2.2,
-      keterangan: 'Musim basah. Air berlimpah, waduk penuh.'
+      keterangan: 'Langit gelap dan hujan. Persediaan air paling banyak.'
     }
   ],
 

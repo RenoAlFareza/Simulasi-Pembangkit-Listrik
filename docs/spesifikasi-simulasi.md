@@ -27,29 +27,38 @@ PLTA besar yang tersambung grid, putaran generator justru terkunci pada putaran 
 |---|---|---|
 | Massa jenis air | ρ = 1000 kg/m³ | tetap |
 | Percepatan gravitasi | g = 9,81 m/s² | tetap |
-| Efisiensi sistem | η = 0,75 | konstanta gabungan: gesekan, turbulensi, turbin, generator; ditampilkan sebagai "efisiensi sistem 75%" |
-| Daya tersedia | `P_air = ρ·g·Q·H` | persamaan 2.14 proposal |
-| Daya keluaran | `P_out = η·ρ·g·Q·H` | persamaan 2.15 proposal; inilah "Daya" yang tampil |
-| Putaran turbin | `n = n₀ · √( (Q·H) / (Q₀·H₀) )` | n₀ = 900 rpm pada Q₀ = 0,30 m³/s dan H₀ = 15 m |
-| Energi | `E = P_out · t` | t dalam **jam**; satuan kWh |
-| Kecepatan aliran dalam pipa | `v = Q / A` | A tetap (diameter pipa tetap) |
+| Efisiensi sistem | η = 0,75 | **satu titik beban acuan**, bukan efisiensi turbin; lihat catatan di bawah |
+| Kapasitas turbin | `Q_kapasitas = 0,40 m³/s` | debit di atasnya **melimpas** dan tidak menambah daya |
+| Debit efektif | `Q_eff = min(Q, 0,40)` | dipakai untuk daya **dan** putaran |
+| Daya tersedia | `P_air = ρ·g·Q_eff·H` | persamaan 2.14 proposal |
+| Daya keluaran | `P_out = η·ρ·g·Q_eff·H` | persamaan 2.15 proposal; inilah "Daya" yang tampil |
+| Putaran turbin | `n = n₀ · √( (Q_eff·H) / (Q₀·H₀) )` | n₀ = 900 rpm pada Q₀ = 0,30 m³/s dan H₀ = 15 m |
+| Energi | `E = P_out · t` | t dalam **detik**, dibagi 3600 untuk kWh |
+| Kecepatan aliran dalam pipa | `v = Q / A` | memakai debit **sungguhan**, karena air limpasan tetap mengalir di pipa |
 | Kecepatan jet di nosel | `v_jet = √(2·g·H)` | fisika Torricelli |
+| Tinggi jatuh relatif | `H / 25 m` | perbandingan terhadap maksimum situs, **bukan** pengukuran waduk |
 
 **Dasar rumus putaran.** Generator magnet permanen pada beban listrik tetap: tegangan sebanding
 putaran (V ∝ n) dan daya listrik sebanding V², sehingga pada kesetimbangan `n ∝ √P`. Karena
-`P ∝ Q·H`, maka `n ∝ √(Q·H)`. Konsekuensinya putaran naik ketika **debit naik atau head naik** —
-perilaku yang diinginkan, sekaligus sahih secara fisis untuk sistem mandiri.
+`P ∝ Q_eff·H`, maka `n ∝ √(Q_eff·H)`. Konsekuensinya putaran naik ketika **debit naik atau head
+naik** — perilaku yang diinginkan, sekaligus sahih secara fisis untuk sistem mandiri.
+
+**Kenapa η konstan tetapi turbin dibatasi.** η turbin nyata berupa kurva terhadap beban, jadi satu
+angka tetap hanya sah di sekitar satu titik beban. Supaya daya tidak naik tanpa batas (yang akan
+membuat angka di luar wilayah PLTMH), yang dibatasi adalah **kapasitas turbin**, bukan η-nya yang
+dibuat melengkung. Satu pembatas `min()` lebih mudah dibaca murid daripada kurva efisiensi, dan
+grafik Debit–Daya mendapat siku yang jelas sebagai bukti adanya batas.
 
 ### 2.1 Rentang nilai
 
 | Variabel | Rentang | Catatan |
 |---|---|---|
-| Debit Q | 0,05 – 0,60 m³/s (batas atas ditentukan preset) | pengatur: slider |
-| Head H | 4 – 25 m (batas atas ditentukan preset) | pengatur: slider |
-| Daya keluaran P_out | ≈ 1,5 – 110 kW | tampil dalam **kW**, 2 desimal |
-| Putaran n | ≈ 190 – 1640 rpm | tampil sebagai bilangan bulat |
-| Energi E | ≈ 0,02 – 1,8 kWh untuk durasi 60 detik | tampil dalam **kWh**, 3 desimal |
-| Durasi percobaan | 30 / 60 / 90 / 120 detik (default 60) | dipilih sebelum mulai, ikut tercatat |
+| Debit Q | 0,05 – 0,60 m³/s (batas atas ditentukan preset) | pengatur: slider; di atas 0,40 m³/s daya mendatar |
+| Head H | 4 – 25 m (**sama di semua preset**) | pengatur: slider; head adalah sifat situs, cuaca tidak mengubahnya |
+| Daya keluaran P_out | ≈ 1,5 – 73,6 kW | tampil dalam **kW**, 2 desimal |
+| Putaran n | ≈ 190 – 1.342 rpm | tampil sebagai bilangan bulat; mendatar setelah kapasitas |
+| Energi E | ≈ 0,02 – 1,2 kWh untuk durasi 60 detik | tampil dalam **kWh**, 3 desimal |
+| Durasi percobaan | 30 / 60 / 90 / 120 detik (default 60) | dipilih sebelum mulai, terkunci setelah data pertama |
 
 ## 3. Basis waktu, timer, dan energi
 
@@ -66,6 +75,9 @@ perilaku yang diinginkan, sekaligus sahih secara fisis untuk sistem mandiri.
 5. Muka air waduk dianggap **tetap** selama percobaan. Alasannya bukan penyederhanaan asal: pada
    durasi 60 detik dengan debit maksimum 0,60 m³/s, air yang terpakai hanya 36 m³ — tidak berarti
    dibanding kapasitas waduk. Karena muka air tetap, head juga tetap.
+6. **Selama fase pemulihan (2 detik pertama), daya dan energi ditampilkan "—"**, bukan angka
+   penuh. Daya yang masih nol tidak boleh tampak seolah sudah tercapai; "—" membedakan "belum
+   mengukur" dari "hasilnya nol". RPM tetap tampil karena justru itulah yang sedang menanjak.
 
 ## 4. Kondisi percobaan dan penguncian
 
@@ -84,13 +96,20 @@ perilaku yang diinginkan, sekaligus sahih secara fisis untuk sistem mandiri.
 
 | Keluaran | Satuan | Sumber |
 |---|---|---|
-| Daya | kW (2 desimal) | `P_out = η·ρ·g·Q·H` |
+| Daya | kW (2 desimal) | `P_out = η·ρ·g·Q_eff·H` |
 | Energi | kWh (3 desimal) | `E = P_out × t` |
-| RPM | rpm (bulat) | `n = n₀·√((Q·H)/(Q₀·H₀))` |
-| Kondisi waduk | label: **Penuh / Normal / Rendah / Kritis** | diturunkan dari `H / H_maks` preset |
+| RPM | rpm (bulat) | `n = n₀·√((Q_eff·H)/(Q₀·H₀))` |
+| Tinggi jatuh air | m + persen dari maksimum situs | `H` dan `H / 25 m` |
 
-"Kondisi waduk" bukan hiasan: ia adalah label turunan dari muka air, dan muka air itulah yang
-menentukan batas atas head. Ambang: Penuh ≥ 90%, Normal 50–89%, Rendah 25–49%, Kritis < 25%.
+Keluaran keempat **bukan lagi "Kondisi waduk"**. Alasannya: setelah head dilepas dari preset,
+waduk tidak punya ketinggian sendiri di dalam model — yang ada hanya head situs yang diatur murid.
+Menuliskan "Penuh / Normal / Rendah / Kritis" akan mengarang pengukuran yang tidak pernah
+dilakukan. Yang ditampilkan sekarang adalah **"Tinggi jatuh air: 15,0 m · 60 % dari maksimum
+situs"**, yaitu perbandingan terhadap jangkauan slider, dan itu dinyatakan terang-terangan supaya
+tidak dikira pembacaan alat.
+
+Bila debit melebihi kapasitas turbin, panel ini menambah catatan eksplisit: *"Debit 0,60 m³/s
+melebihi kapasitas turbin 0,40 m³/s: 0,20 m³/s melimpas dan tidak menambah daya."*
 
 ## 6. Panel Data & Analisis
 
@@ -104,11 +123,25 @@ satu tempat pada konfigurasi agar mudah disamakan):
 |---|---|---|---|---|---|---|
 
 Preset tidak menjadi kolom karena tetap untuk satu aktivitas (ditampilkan sekali di atas tabel).
-Kondisi waduk juga tidak menjadi kolom karena merupakan turunan dari H.
+Tinggi jatuh air sudah menjadi kolom sendiri (H), jadi perbandingan terhadap maksimum situs tidak
+perlu kolom tambahan.
 
 **b. Grafik sebar** dengan pemilih hubungan: **Debit–Daya, Head–Daya, Debit–Energi, Head–Energi**.
 Titik bertambah setiap kali murid menekan **Catat Data**. Sebagai pembanding prediksi, ada garis
 model tipis yang bisa dimatikan (default menyala).
+
+**Garis model hanya digambar bila kondisi lainnya seragam.** Garis itu adalah grafik P(Q) pada H
+tetap (atau P(H) pada Q tetap), jadi ia hanya sah bila seluruh titik memakai nilai besaran lainnya
+yang sama. Bila data mencampur kondisi, garis **disembunyikan** dan keterangan menyebutkan
+sebabnya serta apa yang harus dilakukan. Versi lama mengambil nilai acuan dari **baris data
+terakhir** dan menggambar garis untuk semua titik — kurva yang benar secara hitungan tetapi tidak
+mewakili satu pun titik di sebelah kirinya. Menarik garis yang tidak berlaku lebih buruk daripada
+tidak menggambar apa pun.
+
+**Kenapa Debit–Energi dan Head–Energi tetap ada.** Karena `E = P × t` dengan durasi yang sama untuk
+semua baris, bentuk kedua grafik itu **pasti** menyerupai grafik dayanya; hanya skala sumbu tegaknya
+berbeda. Kesamaan itu dinyatakan terang-terangan di keterangan grafik, sehingga murid yang
+menyadarinya sedang menguji pemahamannya sendiri, bukan menemukan cacat alat.
 
 **c. Grafik RPM vs waktu** — strip chart yang bergerak selama satu percobaan, dan **jejak
 percobaan-percobaan sebelumnya ditumpuk sebagai garis pudar** berlabel nilai Q dan H-nya. Dengan
@@ -129,17 +162,27 @@ hipotesis serta menganalisis data kehilangan makna.
 Preset = **skenario lingkungan** yang mengubah tampilan **dan** menetapkan ketersediaan air.
 Satu preset dipakai untuk satu aktivitas E-LKM dan terkunci selama percobaan berjalan.
 
-| Preset | Tampilan | Q_maks | H_maks | Padanan |
-|---|---|---|---|---|
-| **Kemarau** | langit cerah terik, waduk surut, gelombang tenang | 0,20 m³/s | 12 m | musim kering |
-| **Cerah** | langit biru berawan tipis, gelombang normal | 0,40 m³/s | 20 m | kondisi biasa |
-| **Mendung** | langit kelabu, gelombang lebih besar | 0,50 m³/s | 22 m | menuju musim basah |
-| **Hujan** | langit gelap, partikel hujan, gelombang paling besar | 0,60 m³/s | 25 m | musim basah |
+| Preset | Tampilan | Q_maks | Padanan |
+|---|---|---|---|
+| **Kemarau** | langit cerah terik, waduk surut, gelombang tenang | 0,20 m³/s | musim kering |
+| **Cerah** | langit biru berawan tipis, gelombang normal | 0,40 m³/s | kondisi biasa |
+| **Mendung** | langit kelabu, gelombang lebih besar | 0,50 m³/s | menuju musim basah |
+| **Hujan** | langit gelap, partikel hujan, gelombang paling besar | 0,60 m³/s | musim basah |
 
-Preset tidak boleh dikira kosmetik murni (di modul PLTA ia menentukan batas debit dan head, yang
-langsung membatasi daya) dan tidak boleh dibiarkan bisa diganti di tengah percobaan (kalau bisa,
-hubungan Debit–Daya yang ingin ditemukan murid justru terkontaminasi). Ini juga menyambung ke
-Tabel 8 proposal: faktor "bergantung kondisi aliran dan ketinggian".
+**Preset tidak lagi membatasi head.** Head 4–25 m terbuka penuh di semua preset, karena head adalah
+sifat situs (ketinggian jatuh yang tersedia di lokasi), bukan sesuatu yang ditentukan cuaca.
+Sebelumnya Kemarau dibatasi 12 m dan Hujan 25 m, sehingga murid dapat menyimpulkan "hujan menaikkan
+head dua kali lipat" — miskonsepsi yang lahir dari desain alat, bukan dari fisika. Cuaca hanya
+mengubah **ketersediaan debit** dan **tampilan**.
+
+Konsekuensi yang diterima: Kemarau berdaya maksimum 36,79 kW, sedangkan Cerah, Mendung, dan Hujan
+semuanya **73,58 kW** karena q_maks-nya sudah mencapai atau melewati kapasitas turbin. Mendung dan
+Hujan menjadi identik dalam daya dan putaran, berbeda pada debit yang boleh disetel dan cuaca yang
+tampak. Itu bukan bug — itu pelajaran bahwa air di atas kapasitas turbin tidak menambah daya.
+
+Preset tidak boleh dikira kosmetik murni (ia menentukan batas debit, yang langsung membatasi daya)
+dan tidak boleh dibiarkan bisa diganti di tengah percobaan (kalau bisa, hubungan Debit–Daya yang
+ingin ditemukan murid justru terkontaminasi).
 
 Untuk modul PLTS dan PLTB nanti, preset yang sama mengubah besaran yang relevan di sana
 (intensitas radiasi, kecepatan angin) — itulah alasan preset dibuat sebagai konsep bersama, bukan
@@ -165,14 +208,28 @@ Yang **tetap**: **diameter pipa pesat.** Pada pipa berpenampang tetap, debit yan
 kecepatan aliran naik, bukan diameter bertambah. Menampilkan pipa yang membesar ketika debit naik
 adalah kesalahan fisika yang akan terlihat oleh validator.
 
+**Jenis turbin: crossflow (Banki), bukan Pelton.** Turbinnya digambar sebagai **drum berlubang
+dengan 24 sudu melintang selebar drum** plus *guide vane* di mulut nosel, dan aliran jet dibiarkan
+menembus drum. Ini bukan pilihan kosmetik: rentang head 4–25 m adalah wilayah kerja turbin reaksi
+dan crossflow, sedangkan Pelton bekerja pada head puluhan sampai ratusan meter dan digerakkan satu
+jet yang menabrak mangkuk. Menggambar siluet impuls ala Pelton sambil menulis rumus Torricelli
+membuat gambar dan teks saling menyangkal. Crossflow memakai nosel **dan** jet (sehingga rumus
+`v_jet` tetap sahih) tetapi sudu-sudunya memotong aliran dua kali — itulah yang membuatnya masuk
+akal pada head rendah.
+
+Turbin juga memakai **kapasitas** 0,40 m³/s. Pada debit di atasnya, drum sudah penuh: daya dan
+putaran mendatar, dan sisa air tampak melimpas. Inilah satu-satunya "batas alat" yang ditampilkan,
+dan ia sengaja supaya sumbu Debit–Daya punya siku yang bisa dibaca sebagai bukti kapasitas.
+
 ## 9. Kontrol
 
 Di bawah visualisasi, berurutan:
 
 | Tombol | Perilaku |
 |---|---|
-| **Start** | fase mulai 2 detik → timer berjalan, energi terakumulasi |
-| **Pause** | timer dan akumulasi energi berhenti; animasi berhenti |
+| **Mulai** | fase mulai 2 detik → timer berjalan, energi terakumulasi. Selama fase ini pengatur terkunci |
+| **Jeda** | jam simulasi berhenti (waktu tidak berjalan, jadi energi tidak bertambah), animasi membeku; label berubah menjadi **Lanjut** |
+| **Ulangi Percobaan** | timer dan energi ke nol, kondisi alat kembali awal, **tabel data tetap utuh** |
 
 Di panel Data & Analisis (jauh dari area klik yang ramai, supaya tidak tertekan tanpa sengaja):
 
@@ -185,6 +242,16 @@ Di panel Data & Analisis (jauh dari area klik yang ramai, supaya tidak tertekan 
 Pemisahan dua tombol reset ini disengaja: di kelas, hampir pasti ada kelompok yang menekan reset
 setelah mencatat data. Kalau satu tombol menghapus tabel sekaligus, pekerjaan satu pertemuan bisa
 hilang.
+
+**Durasi ikut terkunci.** Setelah baris pertama tersimpan, tombol durasi nonaktif sampai seluruh
+data dihapus. Sebabnya: satu tabel data = satu aktivitas, dan energi antarbaris dengan durasi
+berbeda bukan pembanding yang sah. Ini cermin dari cara preset dikunci, dan alasannya sama —
+mengendalikan variabel. Keterangan di bawah tombol menyebutkan mengapa terkunci dan apa yang harus
+dilakukan untuk membukanya.
+
+*Catatan:* arti kata "Reset" belum pernah diputuskan secara sadar. Perilaku yang sekarang berjalan
+(dua tombol terpisah) adalah pilihan yang aman bagi data murid, tetapi belum ada keputusan resmi
+apakah "kembalikan percobaan" dan "hapus semua data" memang harus dua tombol berbeda.
 
 ## 10. Peta ke tahapan pembelajaran
 
@@ -234,9 +301,10 @@ Struktur berkas:
 simulasi/
   index.html          kerangka: header, pemilih modul, panel
   aset/gaya.css
-  aset/inti.js        model fisis, timer, pencatatan, grafik, kontrol
-  aset/modul-plta.js  parameter, visualisasi, dan preset modul PLTA
   aset/konfigurasi.js konstanta, rentang, preset, skema kolom tabel
+  aset/fisika.js      model fisis murni: daya, putaran, energi, kapasitas, batas
+  aset/modul-plta.js  parameter, visualisasi, dan preset modul PLTA
+  aset/inti.js        fase percobaan, timer, pencatatan, grafik, kontrol
 ```
 
 ## 13. Yang masih menunggu
@@ -245,7 +313,11 @@ simulasi/
   dipakai tujuh kolom pada bagian 6a, disimpan di `konfigurasi.js`.
 - **Nilai η** (kini 0,75) dan **putaran acuan** (kini 900 rpm) perlu dikonfirmasi ke pembimbing bila
   beliau ingin angka lain.
+- **Nilai `qKapasitas`** (kini 0,40 m³/s) juga perlu dikonfirmasi ke pembimbing: itu batas turbin
+  yang dipilih supaya daya puncak masuk wilayah PLTMH, bukan angka dari proposal.
 - Modul **PLTS** dan **PLTB** menyusul setelah modul PLTA disetujui.
+- **Arti tombol reset** belum diputuskan secara sadar (§9): apakah "kembalikan percobaan" dan
+  "hapus semua data" harus tetap dua tombol, atau digabung dengan konfirmasi.
 
 ## 14. Hasil verifikasi modul PLTA
 
@@ -253,8 +325,22 @@ Modul PLTA sudah berjalan dan diuji, bukan baru dirancang. Dua penguji dipakai, 
 di `_analysis/` supaya bisa dijalankan ulang kapan saja.
 
 **Penguji model** (`_analysis/uji-model.js`) menjalankan `konfigurasi.js` dan `fisika.js` di dalam
-konteks Node tanpa peramban: **26 lulus, 0 gagal**. Yang diperiksa antara lain kecocokan
-`P = ηρgQH` dengan hitungan tangan, batas atas/bawah Q dan H, clamps preset, dan rumus energi.
+konteks Node tanpa peramban: **34 lulus, 0 gagal**. Yang diperiksa antara lain kecocokan
+`P = ηρgQH` dengan hitungan tangan, batas atas/bawah Q dan H, pemangkasan Q oleh preset (head kini
+tidak dipangkas), **perilaku kapasitas turbin** (air limpasan, daya mendatar, putaran mendatar,
+kecepatan pipa tetap naik), dan rumus energi.
+
+Jangkauan seluruh preset setelah keputusan Ronde 1 & 2:
+
+| Preset | Q (m³/s) | H (m) | Puncak daya | Putaran | Melimpas |
+|---|---|---|---|---|---|
+| Kemarau | 0,05–0,20 | 4–25 | 36,79 kW | 949 rpm | tidak |
+| Cerah | 0,05–0,40 | 4–25 | 73,58 kW | 1342 rpm | tidak |
+| Mendung | 0,05–0,50 | 4–25 | 73,58 kW | 1342 rpm | ya |
+| Hujan | 0,05–0,60 | 4–25 | 73,58 kW | 1342 rpm | ya |
+
+Daya keluaran 1,47–73,58 kW · putaran 190–1.342 rpm · energi @60 s 0,025–1,226 kWh · kecepatan pipa
+0,18–2,14 m/s · kecepatan jet 8,86–22,15 m/s.
 
 **Penguji antarmuka** (`_analysis/uji-peramban.js`) mengendalikan halaman sungguhan lewat Chrome
 DevTools Protocol: klik nyata, waktu nyata, bacaan DOM nyata, tangkapan layar nyata. Tiga percobaan
@@ -262,11 +348,13 @@ DevTools Protocol: klik nyata, waktu nyata, bacaan DOM nyata, tangkapan layar ny
 
 | Yang diuji | Hasil |
 |---|---|
-| Durasi nyata tiap percobaan | 32,05 · 32,04 · 32,14 detik — 2 detik pemulihan + 30 detik berjalan, galat < 0,5 % |
+| Durasi nyata tiap percobaan | 32,07 · 32,08 · 32,08 detik — 2 detik pemulihan + 30 detik berjalan, galat < 0,3 % |
 | Timer di layar saat berhenti | `00:30` untuk ketiga percobaan |
-| Energi terhadap `E = P × t` | 0,674 · 0,920 · 0,536 kWh; hitungan tangan 0,6744 · 0,9197 · 0,5365 |
+| Energi terhadap `E = P × t` | 0,540 · 0,613 · 0,536 kWh; P_out 64,75 · 73,58 · 64,38 kW |
+| Efek kapasitas | Hujan 0,60 m³/s dan 0,40 m³/s sama-sama 73,58 kW — melimpas tidak menambah daya |
 | Isi tabel | 3 baris, tujuh kolom, urutan sesuai E-LKM |
 | Jejak RPM | 3 kurva, jumlah pada keterangan cocok dengan jumlah percobaan |
+| Garis model | **tidak digambar** karena titik berasal dari 3 nilai head berbeda; keterangan menyebut sebabnya |
 | Tabel pada layar 390 px | 342 px di dalam 342 px — tidak ada kolom terpotong, halaman tidak meluber |
 | Galat halaman | tidak ada |
 
@@ -286,8 +374,9 @@ Tiga cacat ditemukan pengujian ini dan sudah diperbaiki:
 Catatan penyimpangan dari rancangan awal, semuanya disengaja:
 
 - **Satuan kW, bukan MW.** Catatan permintaan menyebut "Daya (MW)", tetapi PLTMH pada rentang
-  Q 0,05–0,60 m³/s dan H 4–25 m menghasilkan 1,5–110 kW. Menulis MW akan menghasilkan angka
-  0,0015–0,110 yang menyulitkan murid membaca grafik. Perlu dikonfirmasi ulang ke pengguna.
+  Q 0,05–0,60 m³/s dan H 4–25 m menghasilkan 1,5–73,6 kW. Menulis MW akan menghasilkan angka
+  0,0015–0,074 yang menyulitkan murid membaca grafik. **Sudah dikonfirmasi ke penulis
+  (Ronde 2, Q6).**
 - **`P_air` tidak ditampilkan di antarmuka terbuka**, hanya di dalam panel Rumus yang tertutup.
   Ini keputusan Q8: murid mengukur `P_keluaran`, lalu membuka rumus saat menguji hipotesis.
 - **Jejak RPM dibatasi 6 kurva** agar grafik tidak menjadi tidak terbaca setelah satu pertemuan.
@@ -360,10 +449,9 @@ pemblokir.
 
 - Token `--hijau` `#1f9d55 → #157a43` (putih di atasnya 3,49:1 → 5,39:1) dan `--jingga`
   `#d98a1f → #8a5f10` (2,76:1 → 5,64:1). Satu perubahan ini memperbaiki tombol "Catat Data" saat
-  aktif, teks status selesai, dan penanda kondisi waduk.
-- Warna dot kondisi waduk disesuaikan agar ≥ 3:1 terhadap latar panel: Penuh `#157a43`,
-  Normal `#1c62a8`, Rendah `#8a5f10`, Kritis `#c0392b`.
-- Palet seri data digelapkan agar label putih di dalam titik ≥ 4,5:1.
+  aktif dan teks status selesai.
+- *Setelah keputusan Ronde 2 Q2, penanda kondisi waduk beserta empat warnanya dihapus seluruhnya.*
+  Palet seri data digelapkan agar label putih di dalam titik ≥ 4,5:1.
 - **Kontrol nonaktif tidak lagi memakai `opacity`** melainkan warna eksplisit, sehingga teks tetap
   terbaca (sebelumnya turun ke 1,34–1,51:1) dan pilihan yang aktif tetap dapat dibedakan.
 - Warna kanvas grafik digelapkan: angka sumbu dan teks keadaan kosong ≥ 4,5:1, garis model ≥ 3:1.
@@ -401,13 +489,45 @@ pemblokir.
 - **Kartu Data** memakai susunan 3×2 sehingga tidak ada kotak yang menggantung sendirian
   (sebelumnya 5+1).
 
-### 15.9 Hasil verifikasi setelah revisi
+### 15.9 Keputusan Ronde 1 & 2 (grill dengan penulis)
+
+Dua ronde wawancara dijalankan untuk menutup lubang antara kode dan fisika. Semua keputusan
+diterima penulis, dan seluruhnya sudah diterapkan ke kode serta diuji ulang.
+
+| No | Keputusan | Kode yang berubah |
+|---|---|---|
+| R1 Q1 | Realisme diukur pada **mekanisme dan visual**, bukan sekadar angka | dasar semua keputusan di bawah |
+| R1 Q2 | **Cuaca hanya mengubah debit**; head 4–25 m bebas di semua preset | `konfigurasi.js` (buang `hMaks` per preset), `fisika.js` (`batas()`), `inti.js` (kartu preset) |
+| R1 Q3 | Energi sah dibandingkan **hanya bila durasi sama** | lihat R2 Q5 |
+| R1 Q4 | Label turbin → **crossflow** | `modul-plta.js`, `index.html` |
+| R1 Q5 | Daya & energi **"—" selama pemulihan** | `inti.js` (`perbaruiKeluaran`) |
+| R2 Q1 | **Kapasitas turbin** 0,40 m³/s, debit di atasnya melimpas | `konfigurasi.js`, `fisika.js`, `inti.js`, `index.html` |
+| R2 Q2 | **Kosakata waduk dihapus**; keluaran keempat jadi "Tinggi jatuh air" | `konfigurasi.js`, `fisika.js`, `inti.js`, `index.html`, `gaya.css` |
+| R2 Q3 | **Siluet turbin digambar ulang** (drum + 24 sudu + guide vane) | `modul-plta.js` |
+| R2 Q4 | **4 grafik dipertahankan** + keterangan bahwa kurva energi pasti sama bentuknya | `inti.js` |
+| R2 Q5 | **Durasi terkunci** setelah baris pertama | `inti.js` |
+| R2 Q6 | Satuan **kW** dikonfirmasi | — |
+
+Tiga cacat yang diperbaiki berkat wawancara ini, dan akibatnya bila dibiarkan:
+
+1. **Preset mencampur cuaca dengan head** (Kemarau 12 m, Hujan 25 m). Murid akan menyimpulkan hujan
+   menaikkan head dua kali lipat — miskonsepsi yang lahir dari alat, bukan dari fisika.
+2. **Garis model diambil dari baris data terakhir.** Kurva yang benar secara hitungan tetapi tidak
+   mewakili titik mana pun di sebelah kirinya; keterangannya hanya berbunyi "(data terakhir)".
+3. **Daya tampil penuh sambil putaran masih menanjak**, sehingga angka yang belum tercapai tampak
+   seolah sudah tercapai.
+
+Dua hal yang **belum** diputuskan dan sengaja dibiarkan terbuka: arti tombol reset (§9) dan
+penamaan akhir kolom tabel setelah E-LKM disetujui (§13).
+
+### 15.10 Hasil verifikasi setelah revisi
 
 | Pengujian | Hasil |
 |---|---|
-| Penguji model | LULUS 26, GAGAL 0 |
+| Penguji model | LULUS 34, GAGAL 0 |
 | Kriteria penerimaan tiket #1–#8 | 50 dari 50 lulus |
-| Regresi tiga percobaan 30 detik | LULUS; durasi nyata 32,08 · 32,12 · 32,12 detik (galat maks 0,16 %); 3 baris data; legenda 4 entri; galat halaman 0 |
+| Penguji perilaku keputusan Ronde 1 & 2 | LULUS 19, GAGAL 0 |
+| Regresi tiga percobaan 30 detik | LULUS; durasi nyata 32,07 · 32,08 · 32,08 detik (galat maks 0,25 %); 3 baris data; legenda 4 entri; galat halaman 0 |
 | Kontras | 0 kegagalan pada teks aktif (sebelumnya 9, semuanya komponen nonaktif) |
 | Dialog Kartu Data | fokus di dalam dialog, 0 Tab keluar, fokus kembali ke tombol pembuka |
 | `prefers-reduced-motion` | roda, partikel, jet, gelombang, dan hujan beku; timer tetap berjalan |

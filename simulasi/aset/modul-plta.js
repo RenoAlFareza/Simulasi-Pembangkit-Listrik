@@ -5,10 +5,16 @@
    generator -> saluran keluar.  Susunan ini mengikuti bagan pada Gambar 2.16
    proposal (adaptasi U.S. Department of Energy).
 
+   Turbin digambar sebagai turbin CROSSFLOW (Banki–Michell), bukan turbin impuls:
+   nosel persegi + sangkar 24 sudu, dan air terlihat menembus drum dua kali.
+   Alasannya fisis, bukan hiasan — pada head 4–25 m dan debit 0,05–0,60 m³/s,
+   turbin impuls (Pelton) tidak dipakai; crossflow justru lazim pada rentang itu.
+
    Yang bergerak mengikuti besaran:
      kecepatan partikel di pipa  <- v = Q/A        (diameter pipa TETAP)
      kecepatan partikel jet      <- v = akar(2gH)
      putaran roda turbin         <- rpm
+     aliran di dalam drum        <- rpm (hanya tampak saat roda berputar)
      jumlah lampu menyala        <- daya keluaran
      gelombang muka air          <- preset
      langit, awan, hujan         <- preset
@@ -36,12 +42,14 @@ var ModulPLTA = (function () {
 
   var JUMLAH_PARTIKEL_PIPA = 22;
   var JUMLAH_PARTIKEL_JET = 9;
+  var JUMLAH_PARTIKEL_DALAM = 7;
   var JUMLAH_TETES = 70;
 
   var wadah = null;
   var el = {};
   var partikelPipa = [];
   var partikelJet = [];
+  var partikelDalam = [];
   var tetes = [];
   var panjangPipa = 0;
   var faseGelombang = 0;
@@ -148,29 +156,66 @@ var ModulPLTA = (function () {
   }
 
   /* ---------------------------------------------------------------- turbin */
+  /* Turbin crossflow (Banki–Michell). Yang membedakannya dari turbin impuls
+     seperti Pelton: air masuk melewati nosel persegi selebar drum, lalu
+     menembus sudu DUA KALI (lewat atas, turun, lalu lewat bawah). Karena itu
+     roda digambar sebagai sangkar: dinding drum luar, silinder dalam yang
+     berlubang, dan 24 sudu melintang yang miring di antara keduanya.
+     Air yang menembus dua kali inilah yang membuat crossflow tetap masuk akal
+     pada head 4–25 m — wilayah kerja turbin reaksi, bukan impuls. */
   function bangunTurbin() {
     var t = GEOM.turbin;
+    var rLuar = t.r;                        // dinding drum
+    var rDalam = t.r * 0.58;                // silinder dalam: batas lintasan kedua
+    var jmlSudu = 24;
+    var lengkung = 15 * Math.PI / 180;      // kemiringan sudu (circular pitch)
     var sudu = '';
-    for (var i = 0; i < 10; i++) {
-      var a = (i * 36) * Math.PI / 180;
-      var x1 = t.x + Math.cos(a) * 12, y1 = t.y + Math.sin(a) * 12;
-      var x2 = t.x + Math.cos(a) * (t.r - 5), y2 = t.y + Math.sin(a) * (t.r - 5);
-      sudu += '<line x1="' + x1.toFixed(1) + '" y1="' + y1.toFixed(1) +
-              '" x2="' + x2.toFixed(1) + '" y2="' + y2.toFixed(1) +
-              '" stroke="#2f4a5e" stroke-width="5" stroke-linecap="round"/>';
+    for (var i = 0; i < jmlSudu; i++) {
+      var a1 = (i * 360 / jmlSudu) * Math.PI / 180;
+      var a2 = a1 + lengkung;
+      var x1 = t.x + Math.cos(a1) * rDalam, y1 = t.y + Math.sin(a1) * rDalam;
+      var x2 = t.x + Math.cos(a2) * (rLuar - 4), y2 = t.y + Math.sin(a2) * (rLuar - 4);
+      /* titik kendali ditarik ke dalam supaya sudu melengkung seperti sudu asli */
+      var am = (a1 + a2) / 2 + 0.16;
+      var xm = t.x + Math.cos(am) * (rDalam + 7), ym = t.y + Math.sin(am) * (rDalam + 7);
+      sudu += '<path d="M ' + x1.toFixed(1) + ' ' + y1.toFixed(1) +
+              ' Q ' + xm.toFixed(1) + ' ' + ym.toFixed(1) +
+              ' ' + x2.toFixed(1) + ' ' + y2.toFixed(1) +
+              '" fill="none" stroke="#2f4a5e" stroke-width="3.4" stroke-linecap="round"/>';
     }
     return '' +
       '<g>' +
         '<circle cx="' + t.x + '" cy="' + t.y + '" r="' + (t.r + 8) + '" fill="#b9c7d3" opacity=".55"/>' +
         '<g id="plta-roda">' +
-          '<circle cx="' + t.x + '" cy="' + t.y + '" r="' + t.r + '" fill="#dde6ee" stroke="#7d8f9e" stroke-width="3"/>' +
+          /* badan air di dalam sangkar, supaya terlihat air memang menembus */
+          '<circle cx="' + t.x + '" cy="' + t.y + '" r="' + rDalam + '" fill="#cfe3f0"/>' +
+          '<circle cx="' + t.x + '" cy="' + t.y + '" r="' + t.r + '" fill="none" ' +
+            'stroke="#41566b" stroke-width="4"/>' +
+          '<circle cx="' + t.x + '" cy="' + t.y + '" r="' + rDalam + '" fill="none" ' +
+            'stroke="#7d8f9e" stroke-width="2"/>' +
           sudu +
-          '<circle cx="' + t.x + '" cy="' + t.y + '" r="11" fill="#5a6f80"/>' +
+          '<circle cx="' + t.x + '" cy="' + t.y + '" r="9" fill="#5a6f80"/>' +
         '</g>' +
         /* Label diletakkan di atas roda (y 412 - r 50 - 6 = 356), masih di dalam
            gedung dan viewBox. Di bawah roda tidak muat: 412+50+8+16 = 486 > 470. */
         '<text x="' + t.x + '" y="' + (t.y - t.r - 6) + '" text-anchor="middle" ' +
-          'font-size="12" font-weight="600" fill="#2f4a5e">Turbin</text>' +
+          'font-size="12" font-weight="600" fill="#2f4a5e">Turbin crossflow</text>' +
+      '</g>';
+  }
+
+  /* Guide vane: mulut nosel yang melebar sebelum air menyentuh sudu. Tanpa ini
+     nosel terlihat seperti ujung pipa biasa, dan bentuk penyempitan-meliai itu
+     justru bagian yang mengubah tekanan air menjadi kecepatan. */
+  function bangunGuideVane() {
+    var n = GEOM.nosel;
+    var t = GEOM.turbin;
+    var ujung = t.x - t.r - 2;              // tepi kiri roda
+    return '' +
+      '<g>' +
+        '<path d="M ' + n.x + ' ' + (n.y - 6) + ' L ' + ujung + ' ' + (n.y - 17) +
+          '" stroke="#41566b" stroke-width="5" stroke-linecap="round" fill="none"/>' +
+        '<path d="M ' + n.x + ' ' + (n.y + 6) + ' L ' + ujung + ' ' + (n.y + 17) +
+          '" stroke="#41566b" stroke-width="5" stroke-linecap="round" fill="none"/>' +
       '</g>';
   }
 
@@ -246,6 +291,7 @@ var ModulPLTA = (function () {
         bangunWaduk() +
         bangunGedung() +
         bangunPipa() +
+        bangunGuideVane() +
         bangunTurbin() +
       '</svg>';
     container.innerHTML = svg;
@@ -294,6 +340,17 @@ var ModulPLTA = (function () {
       cj.setAttribute('fill', '#eaf7ff');
       el.partikelJet.appendChild(cj);
       partikelJet.push({ node: cj, u: j / JUMLAH_PARTIKEL_JET });
+    }
+
+    /* partikel di dalam drum turbin: menembus dua kali sebelum keluar */
+    partikelDalam = [];
+    for (var m = 0; m < JUMLAH_PARTIKEL_DALAM; m++) {
+      var cd = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      cd.setAttribute('r', '2.8');
+      cd.setAttribute('fill', '#0e5b8a');
+      cd.setAttribute('opacity', '0');
+      el.partikelJet.appendChild(cd);
+      partikelDalam.push({ node: cd, s: m / JUMLAH_PARTIKEL_DALAM });
     }
 
     /* titik hujan */
@@ -381,9 +438,13 @@ var ModulPLTA = (function () {
     }
 
     /* ---- partikel jet : v = akar(2gH) ---- */
+    /* Air masuk ke sisi kiri drum crossflow, sedikit di atas sumbu roda — di
+       situlah mulut masuk turbin crossflow yang sebenarnya. */
     var nosel = GEOM.nosel, turb = GEOM.turbin;
-    var dx = (turb.x - turb.r - 4) - nosel.x;
-    var dy = (turb.y + 4) - nosel.y;
+    var masukX = turb.x - turb.r - 2;
+    var masukY = turb.y - 12;
+    var dx = masukX - nosel.x;
+    var dy = masukY - nosel.y;
     var pxJet = k.vJet * 12 * KONFIG.kecepatanAnimasi;
     for (var j = 0; j < partikelJet.length; j++) {
       var q = partikelJet[j];
@@ -392,6 +453,28 @@ var ModulPLTA = (function () {
       q.node.setAttribute('cx', (nosel.x + dx * q.u).toFixed(1));
       q.node.setAttribute('cy', (nosel.y + dy * q.u).toFixed(1));
       q.node.setAttribute('opacity', String(0.25 + 0.75 * (1 - q.u)));
+    }
+
+    /* ---- air di dalam drum: menembus sudu dua kali ---- */
+    /* Partikel ini hanya ada selama roda berputar. Ia masuk di kiri atas,
+       melintas ke bawah lalu keluar di kanan bawah — jalur dua lintasan yang
+       menjadi ciri turbin crossflow. Tanpa ini, drum terlihat seperti roda
+       biasa yang tidak dilalui air. */
+    for (var m = 0; m < partikelDalam.length; m++) {
+      var pm = partikelDalam[m];
+      if (k.rpmTampil > 1) {
+        pm.s += dt * (0.35 + 0.65 * Math.min(1, k.rpmTampil / 1342));
+        if (pm.s >= 1) { pm.s -= 1; }
+        /* lintasan: kiri-atas -> tengah-bawah -> kanan-bawah */
+        var s = pm.s;
+        var lx = masukX + (turb.r * 2 - 6) * s;
+        var ly = masukY + Math.sin(Math.PI * s) * (turb.r * 0.85) + 10 * s;
+        pm.node.setAttribute('cx', lx.toFixed(1));
+        pm.node.setAttribute('cy', ly.toFixed(1));
+        pm.node.setAttribute('opacity', String(0.85 * Math.sin(Math.PI * Math.min(1, s * 1.15 + 0.05))));
+      } else {
+        pm.node.setAttribute('opacity', '0');
+      }
     }
 
     /* ---- putaran roda turbin ---- */

@@ -4,20 +4,40 @@
    Dimuat sebagai skrip klasik. Bergantung pada KONFIG (dimuat lebih dulu).
    Seluruh isi berkas ini bisa diuji di luar peramban (lihat _analysis/uji-model.js).
 
-   Model: PLTA skala kecil / PLTMH mandiri dengan generator magnet permanen
-   berbeban tetap. Pada sistem seperti ini putaran turbin ikut berubah ketika
-   debit atau head berubah:
+   Model: PLTA skala kecil / PLTMH mandiri dengan turbin crossflow dan generator
+   magnet permanen berbeban tetap. Pada sistem seperti ini putaran turbin ikut
+   berubah ketika debit atau head berubah:
        V ~ n   dan   P_listrik ~ V^2   ->   n ~ akar(P)
    karena P ~ Q*H, maka n ~ akar(Q*H).
+
+   Dua pembatas yang membuat model ini tidak melampaui alatnya:
+   1. Turbin punya kapasitas Q_kapasitas. Air di atas batas itu melimpas lewat
+      pelimpah: ia tetap mengalir di dalam pipa (jadi kecepatan pipa dihitung
+      dari debit sungguhan) tetapi tidak menambah daya listrik dan tidak
+      menambah putaran turbin.
+   2. Efisiensi 0,75 berlaku pada titik beban acuan. Konstannya dibayar dengan
+      pembatas nomor 1, bukan dengan membuat kurva efisiensi melengkung.
    ========================================================================= */
 var Fisika = (function () {
   'use strict';
 
   var C = KONFIG.fisika;
+  var RENTANG = KONFIG.rentang;
 
-  /* Daya yang tersedia pada air, sebelum kerugian. Persamaan 2.14 proposal. */
+  /* Debit yang benar-benar lewat turbin. Sisanya melimpas. */
+  function debitTurbin(q) {
+    return Math.min(q, C.qKapasitas);           // m3/s
+  }
+
+  /* Debit yang melimpas pada kondisi ini. Nol selama Q <= kapasitas. */
+  function airLimpas(q) {
+    return Math.max(0, q - C.qKapasitas);       // m3/s
+  }
+
+  /* Daya yang dibawa air KE TURBIN, sebelum kerugian. Persamaan 2.14 proposal.
+     Debit di atas kapasitas tidak masuk ke turbin, jadi tidak dihitung. */
   function dayaAir(q, h) {
-    return C.rho * C.g * q * h;                 // watt
+    return C.rho * C.g * debitTurbin(q) * h;    // watt
   }
 
   /* Daya keluaran listrik. Persamaan 2.15 proposal. */
@@ -29,9 +49,10 @@ var Fisika = (function () {
     return dayaKeluar(q, h) / 1000;             // kilowatt
   }
 
-  /* Putaran turbin. Sama dengan rpmAcuan pada kondisi acuan. */
+  /* Putaran turbin. Sama dengan rpmAcuan pada kondisi acuan. Ikut debit turbin,
+     bukan debit sungai, sehingga kurva putaran mendatar setelah kapasitas. */
   function rpm(q, h) {
-    var rasio = (q * h) / (C.qAcuan * C.hAcuan);
+    var rasio = (debitTurbin(q) * h) / (C.qAcuan * C.hAcuan);
     return C.rpmAcuan * Math.sqrt(rasio);
   }
 
@@ -41,7 +62,8 @@ var Fisika = (function () {
   }
 
   /* Kecepatan aliran di dalam pipa pesat. Diameter pipa tetap, jadi debit
-     yang naik berarti kecepatan yang naik — bukan pipa yang membesar. */
+     yang naik berarti kecepatan yang naik — bukan pipa yang membesar.
+     Memakai debit sungguhan: air limpasan tetap mengalir di dalam pipa. */
   function kecepatanPipa(q) {
     return q / C.luasPipa;                      // m/s
   }
@@ -51,17 +73,12 @@ var Fisika = (function () {
     return Math.sqrt(2 * C.g * h);              // m/s
   }
 
-  /* Label kondisi waduk diturunkan dari muka air relatif terhadap preset. */
-  function kondisiWaduk(h, hMaks) {
-    var rasio = hMaks > 0 ? h / hMaks : 0;
-    var daftar = KONFIG.ambangWaduk;
-    for (var i = 0; i < daftar.length; i++) {
-      if (rasio >= daftar[i].min) {
-        return { label: daftar[i].label, warna: daftar[i].warna, rasio: rasio };
-      }
-    }
-    var akhir = daftar[daftar.length - 1];
-    return { label: akhir.label, warna: akhir.warna, rasio: rasio };
+  /* Posisi head dalam rentang situs. Head adalah sifat tempat (tinggi bendung
+     dan topografi), bukan sifat musim, sehingga pembandingnya selalu rentang
+     penuh 4–25 m — bukan batas per preset. */
+  function headRelatif(h) {
+    var rasio = RENTANG.hMaks > 0 ? h / RENTANG.hMaks : 0;
+    return { rasio: rasio, persen: rasio * 100 };
   }
 
   function presetById(id) {
@@ -72,12 +89,14 @@ var Fisika = (function () {
     return p[0];
   }
 
-  /* Batas pengatur untuk sebuah preset. */
+  /* Batas pengatur. Preset hanya memangkas debit; head selalu 4–25 m. */
   function batas(presetId) {
     var p = presetById(presetId);
     return {
-      qMin: KONFIG.rentang.qMin, qMaks: Math.min(p.qMaks, KONFIG.rentang.qMaks),
-      hMin: KONFIG.rentang.hMin, hMaks: Math.min(p.hMaks, KONFIG.rentang.hMaks)
+      qMin: RENTANG.qMin,
+      qMaks: Math.min(p.qMaks, RENTANG.qMaks),
+      hMin: RENTANG.hMin,
+      hMaks: RENTANG.hMaks
     };
   }
 
@@ -92,22 +111,24 @@ var Fisika = (function () {
   }
 
   /* Seluruh besaran turunan untuk satu kondisi, sekali hitung. */
-  function hitung(q, h, presetId) {
-    var preset = presetById(presetId);
-    var pKW = dayaKeluarKW(q, h);
+  function hitung(q, h) {
     return {
       q: q,
       h: h,
+      qTurbin: debitTurbin(q),
+      qLimpas: airLimpas(q),
       pAirKW: dayaAir(q, h) / 1000,
-      p: pKW,
+      p: dayaKeluarKW(q, h),
       n: rpm(q, h),
       vPipa: kecepatanPipa(q),
       vJet: kecepatanJet(h),
-      waduk: kondisiWaduk(h, preset.hMaks)
+      head: headRelatif(h)
     };
   }
 
   return {
+    debitTurbin: debitTurbin,
+    airLimpas: airLimpas,
     dayaAir: dayaAir,
     dayaKeluar: dayaKeluar,
     dayaKeluarKW: dayaKeluarKW,
@@ -115,7 +136,7 @@ var Fisika = (function () {
     energiKWh: energiKWh,
     kecepatanPipa: kecepatanPipa,
     kecepatanJet: kecepatanJet,
-    kondisiWaduk: kondisiWaduk,
+    headRelatif: headRelatif,
     presetById: presetById,
     batas: batas,
     bulatkan: bulatkan,

@@ -497,7 +497,14 @@ satu hex yang tidak melalui token menjadi penyebab langsung kegagalan kontras di
 Butir berikut **bukan pekerjaan teknis**. Masing-masing mengubah makna fisis atau pedagogis, dan
 harus diputuskan pemilik skripsi sebelum dikerjakan.
 
-### D-01 · Status "Kondisi waduk"
+> **Status: ketiganya sudah diputuskan dan dikerjakan (Ronde 1 & 2, lihat
+> [spesifikasi-simulasi.md](spesifikasi-simulasi.md) §15.9).** D-01 → opsi **D-01a diperluas**:
+> kosakata "waduk" dihapus sama sekali dan diganti baris "Tinggi jatuh air — 15,0 m · 60 % dari
+> maksimum situs". D-02 → CSV dipertahankan sebagai dokumentasi guru, dengan metadata skenario,
+> tanggal, kelompok, durasi target, dan nama berkas yang tidak menyesatkan. D-03 → legenda jejak
+> RPM digambar di HTML di bawah kanvas. Uraian di bawah dibiarkan sebagai catatan alasan.
+
+### D-01 · Status "Kondisi waduk" — SELESAI (Ronde 2, Q2 = A)
 
 **Keadaan sekarang.** Label Penuh / Normal / Rendah / Kritis dihitung dari perbandingan tinggi
 jatuh yang **diatur murid** terhadap batas maksimum preset. Karena itu tinggi jatuh 12 m bisa
@@ -512,7 +519,7 @@ berisiko menumbuhkan miskonsepsi bahwa waduk adalah besaran yang diamati. Dua ja
   percobaan. Ini mengubah model fisis dan harus dikonsultasikan kepada pembimbing karena
   menyentuh asumsi "muka air dianggap tetap" pada `spesifikasi-simulasi.md` §3.5.
 
-### D-02 · Bentuk CSV untuk dokumentasi
+### D-02 · Bentuk CSV untuk dokumentasi — SELESAI
 
 **Keadaan sekarang.** Berkas CSV hanya memuat tujuh kolom data. Tidak ada skenario, tanggal,
 nama kelompok, maupun durasi target. Nama berkas mengikuti preset yang aktif saat pengunduhan,
@@ -522,7 +529,7 @@ sehingga berkas bernama `data-plta-hujan.csv` dapat berisi baris dari preset Kem
 skenario, tanggal, kelompok, durasi target pada baris komentar, dan nama berkas yang tidak
 menyesatkan), atau cukup sebagai cadangan pribadi sehingga bentuknya dibiarkan.
 
-### D-03 · Legenda jejak RPM
+### D-03 · Legenda jejak RPM — SELESAI
 
 **Keadaan sekarang.** Setiap percobaan menyimpan label kondisi (debit dan tinggi jatuh), tetapi
 label itu tidak pernah digambar, sehingga murid tidak dapat mengetahui kurva pudar mana milik
@@ -539,7 +546,8 @@ Perbaikan dinyatakan selesai hanya bila **ketiga** lapis pengujian berikut dijal
 hasilnya disertakan.
 
 **1. Penguji model** — memastikan tidak ada perubahan fisis yang tidak disengaja.
-Menjalankan penguji model yang sudah ada; hasil wajib tetap 26 lulus / 0 gagal.
+Menjalankan penguji model yang sudah ada; hasil wajib tetap **34 lulus / 0 gagal** (jumlahnya naik
+dari 26 setelah keputusan kapasitas turbin Ronde 2 Q1 menambah delapan pemeriksaan baru).
 
 **2. Penguji antarmuka** — memastikan alur murid utuh.
 Menjalankan penguji antarmuka yang sudah ada: tiga percobaan berurutan, lalu memeriksa durasi
@@ -579,9 +587,9 @@ kontras teks aktif, ketiadaan luber horizontal, atau jumlah model yang lulus.
 | R-LAYOUT-03 | P2 | Komposisi diagram dan elemen terpotong | `modul-plta.js` |
 | R-VISUAL-01 | P2 | Skala tipografi 17 langkah | `gaya.css` |
 | R-VISUAL-02 | P2 | Irama jarak dan warna di luar token | `gaya.css`, `konfigurasi.js`, `inti.js`, `modul-plta.js` |
-| D-01 | Keputusan | Status Kondisi waduk | — |
-| D-02 | Keputusan | Bentuk CSV dokumentasi | — |
-| D-03 | Keputusan | Legenda jejak RPM | — |
+| D-01 | Keputusan | Status Kondisi waduk — **selesai**, kosakata waduk dihapus | — |
+| D-02 | Keputusan | Bentuk CSV dokumentasi — **selesai**, metadata lengkap | — |
+| D-03 | Keputusan | Legenda jejak RPM — **selesai**, legenda HTML | `inti.js`, `gaya.css` |
 
 ---
 
@@ -606,8 +614,8 @@ Dikerjakan bersama karena sama-sama menyentuh `gaya.css` dan saling memengaruhi.
 R-PRESET-01, R-KONTRAS-02, R-A11Y-03, R-A11Y-05.
 
 **Tahap 5 — menunggu keputusan penulis.**
-D-01, D-02, D-03. Setelah diputuskan, masing-masing diturunkan menjadi requirement tersendiri
-dan ditambahkan ke dokumen ini melalui revisi.
+D-01, D-02, D-03 — **sudah diputuskan dan dikerjakan** (lihat catatan status di awal §6). Tahap ini
+tuntas.
 
 ---
 
