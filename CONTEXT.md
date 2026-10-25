@@ -142,18 +142,39 @@ Batas debit yang bisa dilewatkan turbin: **`qKapasitas = 0,40 m³/s`**. Air di a
   bukti adanya batas; kurva η menambah tiga konstanta dan membuat hubungan tidak monoton — beban
   kognitif tanpa pemahaman tambahan.
 
-### Limpasan (spill) — SEPAKAT harus TERLIHAT (Ronde 3, Q1 = A)
+### Limpasan (spill) — SEPAKAT harus TERLIHAT (Ronde 3, Q1 = A; mekanisme diperbaiki Ronde 4, Q2 = A)
 Air di atas kapasitas **wajib terlihat membelok keluar**, bukan hanya tertulis di catatan.
-**Diputuskan:** sebagian partikel jet disembunyikan mengikuti `Q_limpasan/Q_total` (sehingga pada
-0,60 m³/s hanya 2/3 jet yang tampak), dan saluran bypass di titik cabang pipa terisi partikel air
-sebanding porsi limpasan. Saluran itu digambar sebagai **pipa terkubur** menurun keluar tepi bawah
-gambar, bukan pita air di permukaan — sebab pipa pesat di gambar memang terbenam di bawah lereng,
-jadi air yang tampak "jatuh di atas rumput" akan salah secara visual.
+**Diputuskan:** saluran bypass di titik cabang pipa terisi partikel air sebanding porsi limpasan.
+Saluran itu digambar sebagai **pipa terkubur** menurun keluar tepi bawah gambar, bukan pita air di
+permukaan — sebab pipa pesat di gambar memang terbenam di bawah lereng, jadi air yang tampak "jatuh
+di atas rumput" akan salah secara visual.
+**Koreksi Ronde 4, Q2 = A:** mekanisme "partikel jet disembunyikan mengikuti `Q_limpasan/Q_total`"
+dibatalkan. Itu keliru secara fisika: pada head tetap `v_jet = √(2gH)` tidak berubah, jadi debit
+diatur **bukaan nosel** (luas penampang), bukan kecepatan. Yang berlaku sekarang: jet digambar
+sebagai **pita** yang lebarnya `∝ Q_turbin/Q_kapasitas`, **mulut guide vane ikut melebar-menyempit**,
+sembilan butir disebar dalam tiga baris melintang pita, dan **butir tidak pernah disembunyikan** —
+menyembunyikan butir membuat aliran terputus-putus padahal yang benar hanyalah pitanya menipis. Air
+di dalam drum ikut diskalakan dengan bukaan yang sama. Konsekuensi yang benar: **di atas kapasitas
+jet tidak menipis** (nosel sudah terbuka penuh); pembeda 0,40 dan 0,60 m³/s adalah **isi saluran
+limpasan**, bukan jet yang menyusut.
 Alasan tidak cukup angka saja: pada H tetap, Q 0,40 dan Q 0,60 dulu menghasilkan jet, isi drum, dan
 lampu indikator yang **identik**; hanya partikel pipa yang berbeda. Murid akan menyimpulkan semua air
 masuk turbin, padahal dayanya sudah mendatar — gambar menyangkal angka.
 Catatan pemisahan grup: air di dalam drum punya grup SVG sendiri (`#plta-partikel-dalam`), tidak
 dicampur ke `#plta-partikel-jet`, supaya "berapa butir yang terlihat" tidak ambigu.
+
+### Indikator daya — SEPAKAT acuan TETAP (Ronde 4, Q1 = A)
+Jumlah lampu menyala **hanya boleh bergantung pada daya**, karena namanya menjanjikan itu.
+**Diputuskan:** pembaginya tetap = daya maksimum **situs** `η·ρ·g·Q_kapasitas·H_maks` = **73,58 kW**,
+dihitung sekali saat bangun — bukan daya maksimum preset cuaca. Ambang: 44,15 kW (3 lampu),
+22,07 kW (2 lampu), 1,47 kW (1 lampu).
+Alasan: sebelum ini pembaginya `dayaMaksPreset`, yang sejak Ronde 1 hanya berbeda lewat `q_maks`
+(Kemarau 36,79 kW, tiga preset lain 73,58 kW). Akibatnya **keadaan fisis identik tampil berbeda**:
+Q 0,20 m³/s pada H 25 m memberi 36,79 kW / 949 rpm di keempat preset, tetapi lampunya menyala 3 di
+Kemarau dan 2 di tiga preset lain — cuaca mengubah bacaan alat, persis yang dilarang Ronde 1.
+Konsekuensi yang **diterima sadar**: di Kemarau tiga lampu tidak akan pernah menyala (maksimum
+36,79 kW hanya cukup 2 lampu). Itu informasi benar, bukan kerusakan, asalkan keterangannya tertulis.
+
 
 ### Penanda kapasitas pada slider — SEPAKAT (Ronde 3, Q2 = A)
 Batas 0,40 m³/s dulu hanya ada di panel Rumus (tertutup) dan di catatan yang baru muncul **setelah**

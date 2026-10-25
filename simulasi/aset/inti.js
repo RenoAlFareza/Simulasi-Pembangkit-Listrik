@@ -258,14 +258,19 @@
     if (!penanda) { return; }
     var qKap = KONFIG.fisika.qKapasitas;
     var min = parseFloat(el.sliderQ.min), maks = parseFloat(el.sliderQ.max);
+    var ket = $('ketKapasitas');
     if (!(maks > min) || qKap < min || qKap > maks) {
       penanda.style.display = 'none';
+      /* Keterangan ikut disembunyikan: menjelaskan garis yang tidak ada akan
+         membuat murid mencari-cari sesuatu yang memang sengaja tidak digambar. */
+      if (ket) { ket.style.display = 'none'; }
       return;
     }
     var porsi = (qKap - min) / (maks - min);
     penanda.style.display = '';
     penanda.style.left = 'calc(' + INSET_TREK + 'px + (100% - ' + (INSET_TREK * 2) + 'px) * ' + porsi.toFixed(5) + ')';
     penanda.setAttribute('title', 'Kapasitas turbin ' + Fisika.formatAngka(qKap, 2) + ' m³/s');
+    if (ket) { ket.style.display = ''; }
   }
 
   function terapkanBatas() {

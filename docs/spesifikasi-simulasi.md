@@ -209,9 +209,11 @@ Yang **bergerak mengikuti besaran**:
 | Elemen | Digerakkan oleh |
 |---|---|
 | Kecepatan partikel air di dalam pipa | `v = Q/A` — makin besar debit makin cepat |
-| Panjang dan kecepatan jet di nosel | `v_jet = √(2gH)` — head yang mengubahnya |
+| Kecepatan butir jet di nosel | `v_jet = √(2gH)` — head yang mengubahnya |
+| **Tebal pita jet dan bukaan guide vane** | `Q_turbin/Q_kapasitas` — debit yang mengubahnya |
 | Putaran roda turbin | RPM |
-| Jumlah lampu/indikator yang menyala di rumah pembangkit | daya keluaran |
+| **Isi saluran limpasan** | `Q_limpasan` |
+| Jumlah lampu/indikator yang menyala di rumah pembangkit | daya keluaran, dengan **acuan tetap** daya maksimum situs |
 | Amplitudo dan kecepatan gelombang muka air | preset |
 | Langit, awan, partikel hujan | preset |
 
@@ -233,22 +235,48 @@ putaran mendatar, dan sisa air **terlihat melimpas**. Inilah satu-satunya "batas
 ditampilkan, dan ia sengaja supaya sumbu Debit–Daya punya siku yang bisa dibaca sebagai bukti
 kapasitas.
 
-**Limpasan harus terlihat, bukan hanya tertulis** (keputusan Ronde 3, Q1 = A). Sebelum ini, pada
-head tetap debit 0,40 dan 0,60 menghasilkan jet, isi drum, dan lampu indikator yang **identik** —
-hanya partikel di dalam pipa yang berbeda. Gambar menyangkal angka: daya sudah mendatar tetapi
-semua air tampak tetap masuk turbin, sehingga murid wajar menyimpulkan kapasitas itu tidak ada.
-Sekarang:
+**Limpasan harus terlihat, bukan hanya tertulis** (keputusan Ronde 3, Q1 = A, lalu dipertajam
+Ronde 4, Q2 = A). Sebelum ini, pada head tetap debit 0,40 dan 0,60 menghasilkan jet, isi drum, dan
+lampu indikator yang **identik** — hanya partikel di dalam pipa yang berbeda. Gambar menyangkal
+angka: daya sudah mendatar tetapi semua air tampak tetap masuk turbin, sehingga murid wajar
+menyimpulkan kapasitas itu tidak ada. Sekarang:
 
-- **Sebagian partikel jet disembunyikan** mengikuti `Q_limpasan/Q_total`. Pada 0,60 m³/s porsi
-  turbin 2/3, jadi jet tampak 2/3 penuh — menipis bertahap, tidak tiba-tiba hilang.
+- **Tebal jet mengikuti bukaan nosel.** Ini pembetulan fisika, bukan hiasan. Pada head tetap
+  `v_jet = √(2gH)` **tidak berubah**, jadi debit diatur oleh **luas penampang nosel**, bukan oleh
+  kecepatan. Karena itu jet digambar sebagai **pita** yang lebarnya
+  `∝ Q_turbin/Q_kapasitas`, dan **mulut guide vane ikut melebar-menyempit** dengan bukaan yang
+  sama. Sembilan butir air disebar dalam tiga baris melintang pita; jarak melintang antar-baris
+  itulah yang terbaca sebagai tebal air. **Butirnya tidak disembunyikan** saat debit kecil —
+  menyembunyikan sebagian butir membuat aliran terputus-putus, padahal yang sebenarnya terjadi
+  hanyalah pitanya menipis.
 - **Saluran bypass** digambar mulai dari katup di titik cabang pipa pesat, menurun keluar tepi
   bawah gambar, dan **terisi partikel air sebanding porsi limpasan**. Pada Q ≤ kapasitas saluran
   ini kosong.
-- Saluran itu digambar sebagai **pipa terkubur**, bukan pita air di permukaan lereng: pipa pesat di
-  gambar memang terbenam di bawah tanah (pada x = 499 tanah di y ≈ 349 sedangkan pipa di y ≈ 396),
-  jadi air yang tampak "jatuh di atas rumput" akan salah secara visual.
+- **Jet tidak menipis di atas kapasitas.** Sejak 0,40 m³/s nosel sudah terbuka penuh, jadi air yang
+  lewat turbin tetap 0,40 m³/s dan pitanya tetap penuh; yang bertambah adalah air di saluran
+  limpasan. Inilah yang membedakan gambar 0,40 dan 0,60 m³/s — bukan jet yang menyusut, karena air
+  yang **melewati turbin** memang tidak berkurang ketika sungai mengalir lebih besar dari kapasitas.
+- **Air di dalam drum ikut diskalakan** dengan bukaan nosel, supaya seluruh jalur air konsisten:
+  nosel hampir tertutup berarti drum tidak penuh.
+- Saluran bypass digambar sebagai **pipa terkubur**, bukan pita air di permukaan lereng: pipa pesat
+  di gambar memang terbenam di bawah tanah (pada x = 499 tanah di y ≈ 349 sedangkan pipa di
+  y ≈ 396), jadi air yang tampak "jatuh di atas rumput" akan salah secara visual.
 - Air di dalam drum diberi grup SVG sendiri (`#plta-partikel-dalam`), terpisah dari
   `#plta-partikel-jet`, supaya "berapa butir yang terlihat" selalu bermakna satu hal.
+
+**Indikator daya memakai acuan tetap** (keputusan Ronde 4, Q1 = A). Sebelum ini pembaginya adalah
+daya maksimum preset cuaca. Karena head tidak lagi dibatasi preset (Ronde 1), pembagi itu hanya
+berbeda lewat `q_maks`, sehingga **keadaan fisis yang identik tampil berbeda**: Q 0,20 m³/s pada
+H 25 m memberi 36,79 kW di keempat preset, tetapi lampunya menyala 3 di Kemarau dan 2 di tiga preset
+lain. Nama "Indikator daya" menjanjikan fungsi daya saja, jadi pembaginya sekarang **tetap**: daya
+maksimum **situs** = `η·ρ·g·Q_kapasitas·H_maks` = **73,58 kW**, dihitung sekali saat bangun.
+Ambangnya karena itu menjadi 44,15 kW (3 lampu), 22,07 kW (2 lampu), dan 1,47 kW (1 lampu).
+
+Konsekuensi yang diterima dengan sadar: **di preset Kemarau tiga lampu tidak akan pernah menyala**,
+sebab daya maksimumnya 36,79 kW — hanya cukup untuk 2 lampu. Itu bukan cacat, melainkan informasi
+yang benar: pada musim kering turbin memang tidak pernah dipakai sampai batas kapasitasnya pada head
+maksimum. Keterangan di bawah visualisasi (`#ketLampu`) menyebutkan hal ini supaya tidak
+disalahartikan sebagai kerusakan.
 
 ## 9. Kontrol
 
@@ -360,7 +388,7 @@ simulasi/
 
 ## 14. Hasil verifikasi modul PLTA
 
-Modul PLTA sudah berjalan dan diuji, bukan baru dirancang. Lima penguji dipakai, semuanya disimpan
+Modul PLTA sudah berjalan dan diuji, bukan baru dirancang. Tujuh penguji dipakai, semuanya disimpan
 di `_analysis/` supaya bisa dijalankan ulang kapan saja.
 
 **Penguji model** (`_analysis/uji-model.js`) menjalankan `konfigurasi.js` dan `fisika.js` di dalam
@@ -399,16 +427,38 @@ DevTools Protocol: klik nyata, waktu nyata, bacaan DOM nyata, tangkapan layar ny
 **Penguji limpasan** (`_analysis/uji-limpasan.js`) memeriksa apakah limpasan benar-benar
 **tergambar**, bukan sekadar tertulis: ia menghitung partikel jet dan partikel saluran limpasan yang
 opacity-nya > 0,05 (dibaca dari atribut `opacity`, karena `modul-plta.js` menyetelnya lewat
-`setAttribute`). **Lulus 7, gagal 0**:
+`setAttribute`). **Lulus 8, gagal 0**:
 
 | Kondisi | Partikel jet terlihat | Partikel limpasan terlihat |
 |---|---|---|
 | Q 0,30 m³/s (di bawah kapasitas) | 9 / 9 | 0 / 6 |
 | Q 0,40 m³/s (tepat kapasitas) | 9 / 9 | 0 / 6 |
-| Q 0,60 m³/s (porsi turbin 2/3) | 6 / 9 | 2 / 6 |
+| Q 0,60 m³/s (porsi turbin 2/3) | 9 / 9 | 2 / 6 |
 
 Baris terakhir itulah intinya: **gambar 0,40 dan 0,60 sekarang berbeda**, padahal dayanya sama-sama
-73,58 kW. Sebelumnya ketiganya tampil identik.
+73,58 kW. Sebelumnya ketiganya tampil identik. Perhatikan bahwa jet tetap 9/9 di atas kapasitas —
+itu bukan regresi, melainkan hasil keputusan Ronde 4 Q2: sejak nosel terbuka penuh, air yang
+**melewati turbin** memang tidak berkurang; yang bertambah adalah air di saluran limpasan.
+
+**Penguji jet** (`_analysis/uji-jet.js`) mengukur **tebal pita jet** dan sebaran melintang butir air
+pada H = 20 m, dari atribut `d` elemen `#plta-pita-jet` dan posisi butir. **Lulus 8, gagal 0**:
+
+| Q (m³/s) | 0,05 | 0,10 | 0,20 | 0,30 | 0,40 | 0,50 | 0,60 |
+|---|---|---|---|---|---|---|---|
+| Tebal pita (unit SVG) | 10,4 | 12,8 | 19,0 | 26,5 | 34,0 | 34,0 | 34,0 |
+| Sebaran butir melintang | 8,1 | 10,1 | 14,3 | 19,3 | 25,6 | 24,9 | 25,8 |
+| Bukaan guide vane | 5,4 | 6,8 | 9,5 | 12,3 | 15,0 | 15,0 | 15,0 |
+| Butir jet terlihat | 9 | 9 | 9 | 9 | 9 | 9 | 9 |
+
+Yang diperiksa: pita membesar 10,4 → 34,0 unit; membesar **bertahap**, tidak melompat; sebaran butir
+ikut melebar; pada Q terendah pita kurang dari sepertiga tebal penuh; di atas kapasitas pita
+**tetap** penuh; jumlah butir tidak berkurang; guide vane membuka 5,4 → 15,0.
+
+**Penguji lampu** (`_analysis/uji-lampu.js`) membandingkan **daya, putaran, dan jumlah lampu** pada
+Q = 0,20 m³/s dan H = 25 m di **keempat preset**. Sebelum Ronde 4, penguji ini gagal: ketiga angka
+fisisnya identik (36,79 kW · 949 rpm) tetapi lampu menyala **3 di Kemarau dan 2 di tiga preset
+lain**. Setelah acuan lampu dijadikan tetap, **lulus 2, gagal 0** — 2 lampu di keempat preset.
+Puncak per preset: Kemarau 36,79 kW (2 lampu), Cerah/Mendung/Hujan 73,58 kW (3 lampu).
 
 **Penguji garis model** (`_analysis/uji-garis-model.js`) memeriksa kebalikan dari penguji antarmuka:
 tiga percobaan dengan **head sama** (15,0 m) dan debit berbeda (0,10 · 0,20 · 0,30 m³/s). Di sini
@@ -425,7 +475,7 @@ Ketiga grafik diperiksa satu per satu:
 Kedua penguji antarmuka (seragam vs tidak seragam) memang dirancang berlawanan supaya aturan
 keseragaman terbukti dari dua sisi, bukan dari satu kebetulan.
 
-Lima cacat ditemukan pengujian ini dan sudah diperbaiki:
+Tujuh cacat ditemukan pengujian ini dan sudah diperbaiki:
 
 1. **Jejak RPM tersimpan dua kali.** "Catat Data" menyimpan kurva percobaan, lalu "Ulangi
    Percobaan" menyimpannya lagi karena kurva itu belum ditandai tersimpan. Akibatnya 3 percobaan
@@ -444,6 +494,16 @@ Lima cacat ditemukan pengujian ini dan sudah diperbaiki:
 5. **(Ronde 3) Partikel dalam drum menumpang di grup jet.** `#plta-partikel-jet` berisi partikel jet
    **dan** partikel drum, membuat "berapa butir yang terlihat" ambigu dan penguji menghitung
    campuran keduanya. Dipisah ke grup `#plta-partikel-dalam` sendiri.
+6. **(Ronde 4) Lampu indikator bergantung preset, bukan daya.** Pembagi terang-gelapnya adalah daya
+   maksimum **preset cuaca**, bukan daya itu sendiri. Sejak Ronde 1 head tidak lagi dibatasi preset,
+   pembagi itu hanya berbeda lewat `q_maks`, sehingga keadaan fisis identik (36,79 kW · 949 rpm)
+   menyalakan 3 lampu di Kemarau tetapi 2 lampu di preset lain. Cuaca mengubah bacaan alat — persis
+   yang dilarang Ronde 1. Acuan diganti jadi tetap: daya maksimum situs 73,58 kW.
+7. **(Ronde 4) Ketebalan jet tidak mengikuti debit.** Kesembilan butir jet selalu tampak penuh dari
+   Q 0,05 sampai 0,60 m³/s, hanya kecepatannya yang berbeda. Secara fisika itu keliru: pada head
+   tetap `v_jet = √(2gH)` tidak berubah, jadi debit diatur **bukaan nosel**, bukan kecepatan. Jet
+   kini digambar sebagai pita yang lebarnya mengikuti bukaan, dan mulut guide vane ikut bergerak.
+   Ditemukan oleh penguji jet, setelah lolos pemeriksaan mata selama tiga ronde.
 
 Catatan penyimpangan dari rancangan awal, semuanya disengaja:
 
@@ -598,7 +658,7 @@ penamaan akhir kolom tabel setelah E-LKM disetujui (§13).
 
 | No | Pertanyaan | Keputusan | Akibat |
 |---|---|---|---|
-| R3 Q1 | Limpasan tidak terlihat sama sekali | **A — gambar limpasan** | partikel jet menipis mengikuti porsi turbin; saluran bypass terisi sebanding porsi limpasan |
+| R3 Q1 | Limpasan tidak terlihat sama sekali | **A — gambar limpasan** | saluran bypass di titik cabang terisi sebanding porsi limpasan (mekanisme jetnya dikoreksi Ronde 4 Q2) |
 | R3 Q2 | Batas 0,40 m³/s tidak terlihat di slider | **A — penanda kapasitas** | satu garis di trek slider + keterangan; disembunyikan bila di luar jangkauan preset |
 | R3 Q3 | Baris "tinggi jatuh air" ada di panel hasil | **B — hapus dari panel, pindah ke label slider** | panel hanya memuat 3 keluaran yang semuanya hasil ukur |
 | R3 Q4 | Dua tombol reset membingungkan | **A — pertahankan dua tombol, perjelas label** | keterangan tertulis di halaman + `title`/`aria-describedby` pada tombol Ulangi |
@@ -618,16 +678,38 @@ Empat cacat yang diperbaiki berkat Ronde 3, dan akibatnya bila dibiarkan:
 Dua hal yang **belum** diputuskan dan sengaja dibiarkan terbuka: penamaan akhir kolom tabel setelah
 E-LKM disetujui (§13), dan status kata "Reset" yang kini tidak dipakai di antarmuka (§9).
 
-### 15.11 Hasil verifikasi setelah revisi
+### 15.11 Keputusan Ronde 4 (grill lanjutan dengan penulis)
+
+| No | Pertanyaan | Keputusan | Akibat |
+|---|---|---|---|
+| R4 Q1 | Lampu "Indikator daya" menyala berbeda untuk daya yang sama | **A — acuan tetap daya maksimum situs** | pembagi = `ηρg·Q_kapasitas·H_maks` = 73,58 kW, dihitung sekali saat bangun; ambang 44,15 / 22,07 / 1,47 kW |
+| R4 Q2 | Ketebalan jet tidak mengikuti debit | **A — jet sebagai pita + guide vane dinamis** | lebar pita ∝ `Q_turbin/Q_kapasitas`; butir disebar 3 baris; air dalam drum ikut diskalakan |
+
+Dua cacat yang diperbaiki berkat Ronde 4, dan akibatnya bila dibiarkan:
+
+1. **Lampu indikator bergantung cuaca.** Keadaan fisis identik (36,79 kW · 949 rpm) menyalakan 3
+   lampu di Kemarau dan 2 lampu di preset lain. Alat ukur yang bacaannya berubah karena cuaca
+   mengajarkan hal yang salah: murid bisa menyimpulkan cuaca mengubah daya pada kondisi yang sama.
+   Ditemukan dengan penguji, setelah tiga ronde lolos pemeriksaan mata.
+2. **Jet sama tebal dari Q 0,05 sampai 0,60 m³/s.** Pada head tetap, debit diatur bukaan nosel —
+   bukan kecepatan air. Menggambar jet yang tebalnya tetap sementara angkanya berubah sepuluh kali
+   membuat gambar dan angka saling menyangkal, persis pola yang sudah dibereskan pada Ronde 1 dan 3.
+
+Yang **belum** diputuskan dan sengaja dibiarkan terbuka: penamaan akhir kolom tabel setelah E-LKM
+disetujui (§13), dan status kata "Reset" yang kini tidak dipakai di antarmuka (§9).
+
+### 15.12 Hasil verifikasi setelah revisi
 
 | Pengujian | Hasil |
 |---|---|
 | Penguji model | LULUS 34, GAGAL 0 |
 | Kriteria penerimaan tiket #1–#8 | 50 dari 50 lulus |
 | Penguji perilaku keputusan Ronde 1, 2 & 3 | LULUS 27, GAGAL 0 |
-| Penguji limpasan yang terlihat | LULUS 7, GAGAL 0 |
+| Penguji limpasan yang terlihat | LULUS 8, GAGAL 0 |
+| Penguji tebal jet & bukaan nosel | LULUS 8, GAGAL 0 |
+| Penguji lampu indikator | LULUS 2, GAGAL 0 (2 lampu di keempat preset pada kondisi yang sama) |
 | Penguji garis model (head seragam) | LULUS; garis digambar pada Debit–Daya & Debit–Energi, tidak digambar pada kedua grafik head |
-| Regresi tiga percobaan 30 detik | LULUS; durasi nyata 32,05 · 32,04 · 32,08 detik (galat maks 0,25 %); 3 baris data; legenda 4 entri; galat halaman 0 |
+| Regresi tiga percobaan 30 detik | LULUS; durasi nyata 32,08 · 32,04 · 32,10 detik (galat maks 0,3 %); 3 baris data; legenda 4 entri; galat halaman 0 |
 | Kontras | 0 kegagalan pada teks aktif (sebelumnya 9, semuanya komponen nonaktif) |
 | Dialog Kartu Data | fokus di dalam dialog, 0 Tab keluar, fokus kembali ke tombol pembuka |
 | `prefers-reduced-motion` | roda, partikel, jet, gelombang, dan hujan beku; timer tetap berjalan |

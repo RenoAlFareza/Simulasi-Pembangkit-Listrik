@@ -13,9 +13,11 @@
    Yang bergerak mengikuti besaran:
      kecepatan partikel di pipa  <- v = Q/A        (diameter pipa TETAP)
      kecepatan partikel jet      <- v = akar(2gH)
+     tebal pita jet + bukaan nosel <- Q_turbin / Q_kapasitas
      putaran roda turbin         <- rpm
-     aliran di dalam drum        <- rpm (hanya tampak saat roda berputar)
-     jumlah lampu menyala        <- daya keluaran
+     aliran di dalam drum        <- rpm dan bukaan nosel
+     air di saluran limpasan     <- Q_limpasan
+     jumlah lampu menyala        <- daya keluaran (acuan TETAP: daya maks situs)
      gelombang muka air          <- preset
      langit, awan, hujan         <- preset
    ========================================================================= */
@@ -49,6 +51,9 @@ var ModulPLTA = (function () {
 
   var JUMLAH_PARTIKEL_PIPA = 22;
   var JUMLAH_PARTIKEL_JET = 9;
+  /* 9 partikel jet disebar dalam 3 baris x 3 kolom. Jumlah baris = tebal pita
+     air di nosel; kolom = kerapatan butir sepanjang aliran. */
+  var JUMLAH_BARIS_JET = 3;
   var JUMLAH_PARTIKEL_DALAM = 7;
   var JUMLAH_PARTIKEL_LIMPAS = 6;
   var JUMLAH_TETES = 70;
@@ -65,7 +70,15 @@ var ModulPLTA = (function () {
   var faseGelombang = 0;
   var sudutTurbin = 0;
   var presetKini = null;
-  var dayaMaksPreset = 1;
+  /* Acuan indikator daya: daya maksimum SITUS, bukan daya maksimum preset.
+     Sebelumnya nilainya dihitung ulang di terapkanPreset() dari batas.qMaks
+     preset, sehingga cuaca ikut mengubah bacaan alat: Q 0,20 m³/s pada H 25 m
+     memberi 36,79 kW di keempat preset, tetapi lampunya menyala 3 di Kemarau
+     dan 2 di tiga preset lain. Keadaan fisis yang sama harus tampak sama, dan
+     nama "Indikator daya" menjanjikan fungsi daya saja. Acuan tetap juga
+     membuat lampu punya arti yang bisa dibaca: penuh = kapasitas turbin
+     dipakai pada head maksimum. */
+  var dayaMaksSitus = 1;
 
   /* muka air sebagai fungsi head. H = 4 m -> y 300 ; H = 25 m -> y 150 */
   function mukaAir(h) {
@@ -215,16 +228,47 @@ var ModulPLTA = (function () {
 
   /* Guide vane: mulut nosel yang melebar sebelum air menyentuh sudu. Tanpa ini
      nosel terlihat seperti ujung pipa biasa, dan bentuk penyempitan-meliai itu
-     justru bagian yang mengubah tekanan air menjadi kecepatan. */
+     justru bagian yang mengubah tekanan air menjadi kecepatan.
+
+     Dindingnya DINAMIS: pada head tetap v = akar(2gH) tidak berubah, jadi debit
+     diatur oleh BUKAAN nosel (luas penampang), bukan oleh kecepatan. Membiarkan
+     mulut selebar penuh pada debit kecil membuat gambar menyangkal angka —
+     Q 0,05 m³/s tampak mengalir sebanyak Q 0,40 m³/s. */
+  function jalurVane(sisi, bukaan) {
+    var n = GEOM.nosel;
+    var t = GEOM.turbin;
+    var ujung = t.x - t.r - 2;              // tepi kiri roda
+    var yM = t.y - 12;                      // tinggi mulut masuk drum
+    var hN = 2 + 4 * bukaan;                // setengah tebal di kerongkongan
+    var hM = 2 + 15 * bukaan;               // setengah tebal di mulut drum
+    return 'M ' + n.x + ' ' + (n.y + sisi * hN) +
+           ' L ' + ujung + ' ' + (yM + sisi * hM);
+  }
+
+  /* Pita air di antara kedua dinding vane. Digambar sebagai satu poligon
+     tertutup supaya tebalnya menyempit dari kerongkongan ke mulut drum. */
+  function jalurPitaJet(bukaan) {
+    var n = GEOM.nosel;
+    var t = GEOM.turbin;
+    var ujung = t.x - t.r - 2;
+    var yM = t.y - 12;
+    var hN = 2 + 4 * bukaan;
+    var hM = 2 + 15 * bukaan;
+    return 'M ' + n.x + ' ' + (n.y - hN) +
+           ' L ' + ujung + ' ' + (yM - hM) +
+           ' L ' + ujung + ' ' + (yM + hM) +
+           ' L ' + n.x + ' ' + (n.y + hN) + ' Z';
+  }
+
   function bangunGuideVane() {
     var n = GEOM.nosel;
     var t = GEOM.turbin;
     var ujung = t.x - t.r - 2;              // tepi kiri roda
     return '' +
       '<g>' +
-        '<path d="M ' + n.x + ' ' + (n.y - 6) + ' L ' + ujung + ' ' + (n.y - 17) +
+        '<path id="plta-vane-atas" d="M ' + n.x + ' ' + (n.y - 6) + ' L ' + ujung + ' ' + (n.y - 17) +
           '" stroke="#41566b" stroke-width="5" stroke-linecap="round" fill="none"/>' +
-        '<path d="M ' + n.x + ' ' + (n.y + 6) + ' L ' + ujung + ' ' + (n.y + 17) +
+        '<path id="plta-vane-bawah" d="M ' + n.x + ' ' + (n.y + 6) + ' L ' + ujung + ' ' + (n.y + 17) +
           '" stroke="#41566b" stroke-width="5" stroke-linecap="round" fill="none"/>' +
       '</g>';
   }
@@ -297,6 +341,10 @@ var ModulPLTA = (function () {
          grupnya sendiri: keduanya bergerak dengan aturan berbeda, dan
          mencampurnya di satu grup membuat "berapa butir yang terlihat"
          ambigu — yang dihitung jadi campuran jet dan isi drum. */
+      /* Pita air dari nosel ke drum. Digambar SEBELUM partikel jet supaya butir
+         air tetap terlihat di atas pitanya. Lebarnya menyetel ulang tiap frame
+         mengikuti bukaan nosel (lihat jalurPitaJet). */
+      '<path id="plta-pita-jet" d="" fill="#bfe4f7" opacity=".45"/>' +
       '<g id="plta-partikel-jet"></g>' +
       '<g id="plta-partikel-dalam"></g>';
   }
@@ -362,11 +410,17 @@ var ModulPLTA = (function () {
     el.partikelPipa = container.querySelector('#plta-partikel-pipa');
     el.partikelJet = container.querySelector('#plta-partikel-jet');
     el.partikelDalam = container.querySelector('#plta-partikel-dalam');
+    el.vaneAtas = container.querySelector('#plta-vane-atas');
+    el.vaneBawah = container.querySelector('#plta-vane-bawah');
+    el.pitaJet = container.querySelector('#plta-pita-jet');
     el.jalurLimpas = container.querySelector('#plta-jalur-limpas');
     el.partikelLimpas = container.querySelector('#plta-partikel-limpas');
     el.limpasPiring = container.querySelector('#plta-limpas-piring');
     el.limpasTeks = container.querySelector('#plta-limpas-teks');
     el.lampu = container.querySelector('#plta-lampu');
+    /* Acuan indikator daya: kapasitas turbin pada head maksimum situs. */
+    dayaMaksSitus = Fisika.dayaKeluarKW(
+      KONFIG.fisika.qKapasitas, KONFIG.rentang.hMaks);
     el.ukur = {
       grup: container.querySelector('#plta-ukur-h'),
       garis: container.querySelector('#plta-ukur-garis'),
@@ -390,14 +444,23 @@ var ModulPLTA = (function () {
       partikelPipa.push({ node: c, u: i / JUMLAH_PARTIKEL_PIPA });
     }
 
-    /* partikel jet */
+    /* partikel jet: disebar dalam 3 BARIS melintang pita.
+       Satu baris = satu lapis tebal air. Baris di luar bukaan nosel
+       disembunyikan, sehingga debit kecil tampak sebagai benang tipis dan debit
+       penuh tampak sebagai pita penuh — bukan sebagai aliran yang sama tebal. */
     partikelJet = [];
     for (var j = 0; j < JUMLAH_PARTIKEL_JET; j++) {
       var cj = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
       cj.setAttribute('r', '3.1');
       cj.setAttribute('fill', '#eaf7ff');
       el.partikelJet.appendChild(cj);
-      partikelJet.push({ node: cj, u: j / JUMLAH_PARTIKEL_JET });
+      var baris = Math.floor(j / JUMLAH_BARIS_JET);
+      var kolom = j % JUMLAH_BARIS_JET;
+      partikelJet.push({
+        node: cj,
+        u: kolom / JUMLAH_BARIS_JET,
+        baris: baris
+      });
     }
 
     /* partikel di dalam drum turbin: menembus dua kali sebelum keluar */
@@ -449,8 +512,8 @@ var ModulPLTA = (function () {
     el.awan.setAttribute('opacity', String(preset.awan));
     el.hujan.style.display = preset.hujan ? '' : 'none';
 
-    var batas = Fisika.batas(preset.id);
-    dayaMaksPreset = Fisika.dayaKeluarKW(batas.qMaks, batas.hMaks);
+    /* Acuan lampu TIDAK lagi bergantung pada preset cuaca. Dihitung sekali di
+       bangun() dari kapasitas turbin dan head maksimum situs. */
   }
 
   /* k = keadaan simulasi ; dt = selang waktu detik, 0 berarti beku */
@@ -514,40 +577,62 @@ var ModulPLTA = (function () {
 
     /* ---- pembagian air di titik cabang ---- */
     /* qTurbin = bagian debit yang melewati turbin, qLimpas = yang dibuang.
-       Keduanya dipakai dua kali:
-       (1) jet air ke turbin menipis saat sebagian air dibelokkan — inilah yang
-           membuat Q 0,40 dan Q 0,60 TIDAK lagi tampak sama, padahal dayanya
-           memang sudah mendatar;
-       (2) saluran limpasan hanya berisi air saat ada kelebihan.
-       Tanpa (1), gambar menyangkal angka: daya berhenti naik tetapi semua air
+       Keduanya dipakai dengan cara berbeda:
+       (1) qTurbin menentukan BUKAAN NOSEL, jadi tebal pita air yang masuk drum.
+           Ini yang membuat Q 0,05 tampak sebagai benang tipis, padahal
+           kecepatan butirnya sama dengan Q 0,40 (v = akar(2gH) tidak berubah);
+       (2) qLimpas menentukan isi saluran limpasan, sehingga Q 0,40 dan Q 0,60
+           tetap tidak identik walau jetnya sama-sama penuh — pada 0,60 m³/s
+           nosel memang sudah terbuka penuh (0,40 m³/s lewat), dan 0,20 m³/s
+           sisanya terlihat di saluran bypass.
+       Tanpa (2), gambar menyangkal angka: daya berhenti naik tetapi semua air
        terlihat tetap masuk turbin. */
     var qTurbin = Math.max(0, k.qTurbin !== undefined ? k.qTurbin : k.q);
     var qLimpas = Math.max(0, k.qLimpas || 0);
     var qTotal = qTurbin + qLimpas;
-    /* porsi air yang sampai ke turbin, 0..1 */
-    var porsiTurbin = qTotal > 0 ? qTurbin / qTotal : 0;
+    /* porsi air yang dibuang ke saluran limpasan, 0..1 */
     var porsiLimpas = qTotal > 0 ? qLimpas / qTotal : 0;
 
-    /* ---- partikel jet : v = akar(2gH) ---- */
-    /* Air masuk ke sisi kiri drum crossflow, sedikit di atas sumbu roda — di
-       situlah mulut masuk turbin crossflow yang sebenarnya. */
+    /* ---- pembukaan nosel: tebal pita air ----
+       Pada head tetap v = akar(2gH) TIDAK berubah, jadi debit diatur oleh luas
+       penampang nosel. Bukaan = qTurbin / qKapasitas, 0..1. Inilah yang membuat
+       Q 0,05 tampak sebagai benang tipis dan Q 0,40 sebagai pita penuh, padahal
+       kecepatan butirnya sama. Sebelumnya hanya porsi turbin yang dipakai,
+       sehingga di bawah kapasitas seluruh debit tampak sama tebal. */
+    var qKapasitas = KONFIG.fisika.qKapasitas || 0.4;
+    var bukaan = qKapasitas > 0 ? Math.min(1, Math.max(0, qTurbin / qKapasitas)) : 0;
+    var hN = 2 + 4 * bukaan;
+    var hM = 2 + 15 * bukaan;
+    if (el.vaneAtas) {
+      el.vaneAtas.setAttribute('d', jalurVane(-1, bukaan));
+      el.vaneBawah.setAttribute('d', jalurVane(1, bukaan));
+      el.pitaJet.setAttribute('d', jalurPitaJet(bukaan));
+    }
+
+    /* ---- partikel jet : v = akar(2gH), tebal mengikuti bukaan ---- */
+    /* Ketiga baris SELALU tampak — yang berubah adalah jarak melintangnya
+       terhadap sumbu jet. Menyembunyikan sebagian butir akan membuat aliran
+       terputus-putus, padahal yang sebenarnya terjadi hanyalah pitanya menipis.
+       Sebaran melintang inilah yang terbaca sebagai tebal air. */
     var nosel = GEOM.nosel, turb = GEOM.turbin;
     var masukX = turb.x - turb.r - 2;
     var masukY = turb.y - 12;
     var dx = masukX - nosel.x;
     var dy = masukY - nosel.y;
     var pxJet = k.vJet * 12 * KONFIG.kecepatanAnimasi;
-    /* Ambang tampil per partikel: partikel dengan nomor urut di atas porsi
-       turbin disembunyikan. Efeknya jet menipis secara bertahap (0,60 m³/s
-       menyisakan 2 dari 3 bagian), bukan tiba-tiba hilang. */
+    var tengahBaris = (JUMLAH_BARIS_JET - 1) / 2;
     for (var j = 0; j < partikelJet.length; j++) {
       var q = partikelJet[j];
-      var tampakJet = (j + 0.5) / partikelJet.length <= porsiTurbin + 0.0001;
       q.u += (pxJet * dt) / Math.max(1, Math.abs(dx));
       if (q.u > 1) { q.u -= 1; }
-      q.node.setAttribute('cx', (nosel.x + dx * q.u).toFixed(1));
-      q.node.setAttribute('cy', (nosel.y + dy * q.u).toFixed(1));
-      q.node.setAttribute('opacity', tampakJet ? String(0.25 + 0.75 * (1 - q.u)) : '0');
+      /* sebaran melintang: baris 0 paling atas, baris terakhir paling bawah */
+      var sebar = tengahBaris > 0 ? (q.baris - tengahBaris) / tengahBaris : 0;
+      var hLokal = hN + (hM - hN) * q.u;
+      var x = nosel.x + dx * q.u;
+      var y = nosel.y + dy * q.u + sebar * hLokal * 0.8;
+      q.node.setAttribute('cx', x.toFixed(1));
+      q.node.setAttribute('cy', y.toFixed(1));
+      q.node.setAttribute('opacity', String(0.25 + 0.75 * (1 - q.u)));
     }
 
     /* ---- partikel limpasan: menuruni saluran bypass ---- */
@@ -576,10 +661,14 @@ var ModulPLTA = (function () {
     /* Partikel ini hanya ada selama roda berputar. Ia masuk di kiri atas,
        melintas ke bawah lalu keluar di kanan bawah — jalur dua lintasan yang
        menjadi ciri turbin crossflow. Tanpa ini, drum terlihat seperti roda
-       biasa yang tidak dilalui air. */
+       biasa yang tidak dilalui air.
+       Banyaknya air di dalam drum ikut bukaan nosel: pada debit kecil hanya
+       sebagian jalur yang terisi, pada debit penuh seluruhnya. Tanpa skala ini
+       jalur air di dalam drum tetap "penuh" walau noselnya hampir tertutup. */
     for (var m = 0; m < partikelDalam.length; m++) {
       var pm = partikelDalam[m];
-      if (k.rpmTampil > 1) {
+      var terisiDalam = Math.max(0, Math.min(1, bukaan * partikelDalam.length - m));
+      if (k.rpmTampil > 1 && terisiDalam > 0) {
         pm.s += dt * (0.35 + 0.65 * Math.min(1, k.rpmTampil / 1342));
         if (pm.s >= 1) { pm.s -= 1; }
         /* lintasan: kiri-atas -> tengah-bawah -> kanan-bawah */
@@ -588,7 +677,8 @@ var ModulPLTA = (function () {
         var ly = masukY + Math.sin(Math.PI * s) * (turb.r * 0.85) + 10 * s;
         pm.node.setAttribute('cx', lx.toFixed(1));
         pm.node.setAttribute('cy', ly.toFixed(1));
-        pm.node.setAttribute('opacity', String(0.85 * Math.sin(Math.PI * Math.min(1, s * 1.15 + 0.05))));
+        pm.node.setAttribute('opacity', String(
+          terisiDalam * 0.85 * Math.sin(Math.PI * Math.min(1, s * 1.15 + 0.05))));
       } else {
         pm.node.setAttribute('opacity', '0');
       }
@@ -601,7 +691,9 @@ var ModulPLTA = (function () {
       'rotate(' + sudutTurbin.toFixed(1) + ' ' + turb.x + ' ' + turb.y + ')');
 
     /* ---- lampu daya ---- */
-    var rasio = dayaMaksPreset > 0 ? k.p / dayaMaksPreset : 0;
+    /* Pembagi TETAP (daya maksimum situs), bukan daya maksimum preset. Lihat
+       catatan panjang pada deklarasi dayaMaksSitus. */
+    var rasio = dayaMaksSitus > 0 ? k.p / dayaMaksSitus : 0;
     var menyala = rasio >= 0.60 ? 3 : rasio >= 0.30 ? 2 : rasio > 0.02 ? 1 : 0;
     var anak = el.lampu.children;
     for (var L = 0; L < anak.length; L++) {

@@ -60,7 +60,7 @@ yang tidak perlu berisiko menurunkan mutu:
 
 | Aspek | Hasil terukur |
 |---|---|
-| Model fisis | Penguji model 26 lulus / 0 gagal; energi 0,920 kWh = 110,36 × 30/3600 tepat |
+| Model fisis | Penguji model 34 lulus / 0 gagal; daya puncak 73,58 kW = ηρg·0,40·25 tepat |
 | Kontras teks aktif pada keadaan diam | 92 elemen diukur, semua lulus WCAG AA, terendah 4,74:1 |
 | Penanda fokus papan tik | 18 dari 18 elemen punya outline, `:focus-visible` berperilaku benar, kontras 17,9:1 |
 | Luber horizontal | 0 pelaku pada 10 lebar uji (280–1440 px) |
@@ -545,8 +545,8 @@ kecil di bawah grafik agar tidak menutupi area plot pada layar sempit.
 ## 7. Metode verifikasi
 
 Perbaikan dinyatakan selesai hanya bila **lapis pengujian berikut** dijalankan ulang dan
-hasilnya disertakan. Enam lapis dipakai; nomor 1–3 sudah ada sejak awal, nomor 4–6 menyusul setelah
-keputusan hasil grill Ronde 1–3.
+hasilnya disertakan. Sembilan lapis dipakai; nomor 1–3 sudah ada sejak awal, nomor 4–6 menyusul
+setelah keputusan hasil grill Ronde 1–3, dan nomor 7–9 setelah Ronde 4.
 
 **1. Penguji model** — memastikan tidak ada perubahan fisis yang tidak disengaja.
 Menjalankan penguji model yang sudah ada; hasil wajib tetap **34 lulus / 0 gagal** (jumlahnya naik
@@ -571,13 +571,31 @@ metadata CSV, dan siluet turbin crossflow.
 **5. Penguji limpasan** (`_analysis/uji-limpasan.js`) — memastikan limpasan **tergambar**, bukan
 sekadar tertulis. Ia menghitung partikel jet dan partikel saluran limpasan yang benar-benar
 terlihat (opacity > 0,05) pada tiga debit, dan membuktikan bahwa 0,40 dan 0,60 m³/s tidak lagi
-identik secara visual meski dayanya sama. **7 lulus / 0 gagal.**
+identik secara visual meski dayanya sama. **8 lulus / 0 gagal.**
 
 **6. Penguji garis model** (`_analysis/uji-garis-model.js`) — pasangan berlawanan dari penguji
 antarmuka. Penguji antarmuka memakai tiga head berbeda sehingga garis model harus TIDAK digambar;
 penguji ini memakai head seragam 15,0 m dengan tiga debit sehingga garis model harus MUNCUL, dan
 keterangannya harus menyebut 15,0 m tanpa kata "data terakhir". Keempat grafik diperiksa satu per
 satu. Regresi di sini berarti aturan keseragaman patah di salah satu arah.
+
+**7. Penguji tebal jet** (`_analysis/uji-jet.js`) — memastikan jet **menipis** ketika debit turun,
+karena pada head tetap kecepatan jet tetap dan debitnya diatur bukaan nosel. Mengukur tebal pita
+`#plta-pita-jet` dari atribut `d`, sebaran melintang butir, dan bukaan guide vane pada tujuh debit
+(Q 0,05 → 0,60 m³/s). **8 lulus / 0 gagal**; tebal pita 10,4 → 34,0 unit, tetap penuh di atas
+kapasitas.
+
+**8. Penguji lampu indikator** (`_analysis/uji-lampu.js`) — memastikan jumlah lampu **hanya**
+bergantung pada daya. Membandingkan keempat preset pada Q 0,20 m³/s dan H 25 m: dayanya harus
+identik (36,79 kW) **dan** jumlah lampunya harus identik. Sebelum Ronde 4 lapis ini gagal
+(3 lampu di Kemarau vs 2 di preset lain); sekarang **2 lulus / 0 gagal**.
+
+**9. Pemeriksaan visual** — tangkapan layar pada kondisi yang ekstrem, bukan yang representatif:
+Q terendah, Q tepat kapasitas, Q di atas kapasitas, dan head maksimum di tiap preset. Yang dicari
+bukan "apakah tampak bagus", melainkan **apakah gambar menyangkal angka**: apakah air yang
+melimpas terlihat, apakah jet menipis, apakah jumlah lampu masuk akal. Dua bug di Ronde 4 hanya
+tertangkap karena lapis 7 dan 8 memaksa angka dibandingkan, sementara tiga ronde sebelumnya lolos
+pemeriksaan mata.
 
 > Catatan metode: penguji membaca atribut `opacity`, bukan `style.opacity`, karena
 > `modul-plta.js` menyetelnya lewat `setAttribute`. Penguji juga wajib menekan "Ulangi Percobaan"
