@@ -242,6 +242,32 @@
   /* -------------------------------------------------------------- batas nilai */
   function batasKini() { return Fisika.batas(keadaan.preset); }
 
+  /* Penanda kapasitas pada trek slider debit.
+     Tiga hal yang harus benar:
+     (1) posisinya dihitung dari min/max slider saat ini, bukan dari 0,05/0,60
+         yang tetap — karena batas atas berubah mengikuti preset;
+     (2) ia disembunyikan bila kapasitas berada di luar jangkauan slider
+         (preset Kemarau berhenti di 0,20 m³/s, jadi penanda 0,40 tidak punya
+         tempat di trek dan tidak boleh menempel di ujung kanan);
+     (3) offset 9 px di kedua ujung meniru inset thumb bawaan peramban supaya
+         garisnya jatuh di titik yang sama dengan nilai pada trek. */
+  var INSET_TREK = 9;
+
+  function perbaruiPenandaKapasitas() {
+    var penanda = $('penandaKapasitas');
+    if (!penanda) { return; }
+    var qKap = KONFIG.fisika.qKapasitas;
+    var min = parseFloat(el.sliderQ.min), maks = parseFloat(el.sliderQ.max);
+    if (!(maks > min) || qKap < min || qKap > maks) {
+      penanda.style.display = 'none';
+      return;
+    }
+    var porsi = (qKap - min) / (maks - min);
+    penanda.style.display = '';
+    penanda.style.left = 'calc(' + INSET_TREK + 'px + (100% - ' + (INSET_TREK * 2) + 'px) * ' + porsi.toFixed(5) + ')';
+    penanda.setAttribute('title', 'Kapasitas turbin ' + Fisika.formatAngka(qKap, 2) + ' m³/s');
+  }
+
   function terapkanBatas() {
     var b = batasKini();
     el.sliderQ.min = String(b.qMin);
@@ -259,6 +285,7 @@
     if (keadaan.h < b.hMin) { keadaan.h = b.hMin; }
     el.sliderQ.value = String(keadaan.q);
     el.sliderH.value = String(keadaan.h);
+    perbaruiPenandaKapasitas();
     perbaruiLabelPengatur();
   }
 
@@ -270,6 +297,15 @@
     /* Tanpa aria-valuetext, pembaca layar mengumumkan "0.3" tanpa satuan. */
     el.sliderQ.setAttribute('aria-valuetext', teksQ);
     el.sliderH.setAttribute('aria-valuetext', teksH);
+    /* Persentase terhadap maksimum situs dulu tinggal di panel Hasil
+       Pengukuran. Karena panel itu sekarang hanya memuat hasil ukur, keterangan
+       yang sebenarnya milik PENGATUR ini dipindahkan ke sini: dekat slidernya
+       sendiri, tempat murid melihat angka yang diubahnya. */
+    var head = Fisika.headRelatif(keadaan.h);
+    $('ketHead').textContent = teksH + ' — ' +
+      Fisika.formatAngka(head.persen, 0) + ' % dari maksimum situs (' +
+      Fisika.formatAngka(K.rentang.hMaks, 0) + ' m). Bukan hasil pengukuran, ' +
+      'melainkan perbandingan dengan situs ini.';
   }
 
   function pilihPreset(id) {
@@ -994,14 +1030,10 @@
       : hasil.n;
     $('nilaiRpm').textContent = Fisika.formatAngka(nTampil, 0);
 
-    /* Baris ini BUKAN besaran yang diukur: tinggi jatuh air adalah sifat situs
-       yang diatur murid, dan persennya dibandingkan terhadap 25 m (maksimum
-       situs), bukan terhadap batas skenario. Tidak ada lagi kosakata "waduk",
-       karena waduk tidak punya ketinggian sendiri di dalam model ini. */
-    var head = hasil.head;
-    $('nilaiHead').textContent =
-      Fisika.formatAngka(h, 1) + ' m · ' + Fisika.formatAngka(head.persen, 0) +
-      ' % dari maksimum situs';
+    /* Tinggi jatuh air TIDAK lagi ditampilkan di sini. Panel ini khusus hasil
+       ukur percobaan — daya, energi, putaran — sedangkan head adalah besaran
+       yang DIATUR lewat slider. Persentase terhadap maksimum situs kini
+       menempel pada slidernya (lihat perbaruiLabelPengatur). */
     var catatan = [];
     if (hasil.qLimpas > 0.0001) {
       catatan.push('Debit ' + Fisika.formatAngka(q, 2) + ' m³/s melebihi kapasitas turbin ' +
@@ -1060,6 +1092,8 @@
     var hasil = Fisika.hitung(q, h);
     ModulPLTA.perbarui({
       q: q, h: h,
+      qTurbin: hasil.qTurbin,
+      qLimpas: hasil.qLimpas,
       vPipa: hasil.vPipa,
       vJet: hasil.vJet,
       rpmTampil: keadaan.rpmTampil,

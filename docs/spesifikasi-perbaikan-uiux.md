@@ -497,12 +497,14 @@ satu hex yang tidak melalui token menjadi penyebab langsung kegagalan kontras di
 Butir berikut **bukan pekerjaan teknis**. Masing-masing mengubah makna fisis atau pedagogis, dan
 harus diputuskan pemilik skripsi sebelum dikerjakan.
 
-> **Status: ketiganya sudah diputuskan dan dikerjakan (Ronde 1 & 2, lihat
-> [spesifikasi-simulasi.md](spesifikasi-simulasi.md) §15.9).** D-01 → opsi **D-01a diperluas**:
-> kosakata "waduk" dihapus sama sekali dan diganti baris "Tinggi jatuh air — 15,0 m · 60 % dari
-> maksimum situs". D-02 → CSV dipertahankan sebagai dokumentasi guru, dengan metadata skenario,
-> tanggal, kelompok, durasi target, dan nama berkas yang tidak menyesatkan. D-03 → legenda jejak
-> RPM digambar di HTML di bawah kanvas. Uraian di bawah dibiarkan sebagai catatan alasan.
+> **Status: ketiganya sudah diputuskan dan dikerjakan (Ronde 1, 2 & 3, lihat
+> [spesifikasi-simulasi.md](spesifikasi-simulasi.md) §15.9–§15.10).** D-01 → opsi **D-01a
+> diperluas**: kosakata "waduk" dihapus sama sekali. Baris tinggi jatuh air sempat ditaruh di panel
+> Hasil Pengukuran, lalu **dipindah ke label slider head** pada Ronde 3 (Q3 = B), karena panel itu
+> khusus hasil ukur sedangkan head adalah besaran yang diatur. D-02 → CSV dipertahankan sebagai
+> dokumentasi guru, dengan metadata skenario, tanggal, kelompok, durasi target, dan nama berkas yang
+> tidak menyesatkan. D-03 → legenda jejak RPM digambar di HTML di bawah kanvas. Uraian di bawah
+> dibiarkan sebagai catatan alasan.
 
 ### D-01 · Status "Kondisi waduk" — SELESAI (Ronde 2, Q2 = A)
 
@@ -558,6 +560,22 @@ dengan pengukuran, bukan dengan membaca kode. Untuk kebutuhan yang menyangkut ta
 aksesibilitas, bukti berupa nilai terukur (rasio kontras, `getBoundingClientRect`,
 `document.activeElement`, `getBBox`, jumlah pilihan di pohon aksesibilitas) ditambah tangkapan
 layar pada lebar 360 px, 768 px, 1024 px, dan 1366 px.
+
+**4. Penguji perilaku keputusan** (`_analysis/uji-keputusan.js`) — memastikan setiap keputusan
+hasil grill benar-benar berjalan di halaman, bukan hanya tertulis di dokumen. Kini **27 lulus /
+0 gagal**, mencakup "—" selama pemulihan, kartu preset tanpa "H maks", penanda kapasitas yang
+tampil dan disembunyikan sesuai jangkauan preset, keterangan Ulangi vs Hapus, catatan melimpas,
+metadata CSV, dan siluet turbin crossflow.
+
+**5. Penguji limpasan** (`_analysis/uji-limpasan.js`) — memastikan limpasan **tergambar**, bukan
+sekadar tertulis. Ia menghitung partikel jet dan partikel saluran limpasan yang benar-benar
+terlihat (opacity > 0,05) pada tiga debit, dan membuktikan bahwa 0,40 dan 0,60 m³/s tidak lagi
+identik secara visual meski dayanya sama. **7 lulus / 0 gagal.**
+
+> Catatan metode: penguji membaca atribut `opacity`, bukan `style.opacity`, karena
+> `modul-plta.js` menyetelnya lewat `setAttribute`. Penguji juga wajib menekan "Ulangi Percobaan"
+> di antara percobaan — selama fase berjalan, `pilihPreset()` dan penangan slider sama-sama
+> menolak bertindak, sehingga nilai baru akan diabaikan tanpa pesan apa pun.
 
 **Ambang regresi.** Perbaikan ditolak bila menurunkan salah satu angka pada §3.1 — khususnya fps,
 kontras teks aktif, ketiadaan luber horizontal, atau jumlah model yang lulus.

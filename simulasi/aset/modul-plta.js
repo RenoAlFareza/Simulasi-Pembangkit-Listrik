@@ -37,12 +37,20 @@ var ModulPLTA = (function () {
     nosel: { x: 570, y: 404 },
     turbin: { x: 665, y: 412, r: 50 },
     generator: { x: 730, y: 358, w: 130, h: 56 },
-    gedung: { x1: 545, y1: 320, x2: 900, y2: 470, puncak: 250 }
+    gedung: { x1: 545, y1: 320, x2: 900, y2: 470, puncak: 250 },
+    /* Saluran limpasan: cabang buangan dari pipa pesat yang membawa kelebihan
+       air melewati turbin. Kedua pipa di sini TERKUBUR di bawah lereng (pipa
+       pesat pada x=499 ada di y=396 sementara tanah di y=349), jadi cabangnya
+       juga digambar sebagai pipa terkubur yang turun ke hilir dan keluar dari
+       tepi bawah gambar — bukan pita air yang mengambang di atas rerumputan.
+       Titik cabang duduk tepat di jalur pipa pesat (x 499, y 396,4). */
+    limpasan: { x1: 499, y1: 396.4, cx: 497, cy: 442, x2: 468, y2: 470 }
   };
 
   var JUMLAH_PARTIKEL_PIPA = 22;
   var JUMLAH_PARTIKEL_JET = 9;
   var JUMLAH_PARTIKEL_DALAM = 7;
+  var JUMLAH_PARTIKEL_LIMPAS = 6;
   var JUMLAH_TETES = 70;
 
   var wadah = null;
@@ -50,8 +58,10 @@ var ModulPLTA = (function () {
   var partikelPipa = [];
   var partikelJet = [];
   var partikelDalam = [];
+  var partikelLimpas = [];
   var tetes = [];
   var panjangPipa = 0;
+  var panjangLimpas = 0;
   var faseGelombang = 0;
   var sudutTurbin = 0;
   var presetKini = null;
@@ -226,6 +236,43 @@ var ModulPLTA = (function () {
            ' ' + GEOM.nosel.x + ' ' + GEOM.nosel.y;
   }
 
+  /* Saluran limpasan: cabang dari pipa pesat yang membuang kelebihan air
+     sebelum nosel. Ini bukan hisapan visual — debit di atas kapasitas turbin
+     memang harus pergi ke suatu tempat, dan kalau semua partikel tetap masuk ke
+     drum, gambar menyangkal angka (daya mendatar padahal airnya terlihat semua
+     masuk). Cabangnya ditaruh di pipa pesat karena di situlah katup bypass pada
+     PLTMH sungguhan berada: sebelum nosel, bukan di intake. */
+  function jalurLimpas() {
+    var l = GEOM.limpasan;
+    return 'M ' + l.x1 + ' ' + l.y1 + ' Q ' + l.cx + ' ' + l.cy + ' ' + l.x2 + ' ' + l.y2;
+  }
+
+  /* Saluran limpasan: cabang buangan dari pipa pesat yang membawa kelebihan air
+     melewati turbin. Salurannya SELALU digambar — di PLTMH sungguhan pipa
+     bypass memang ada terus, yang berubah hanya ada-tidaknya air yang lewat.
+     Menampilkan pipa yang muncul-tenggelam hanya saat debit tinggi akan
+     terbaca sebagai animasi hiasan, bukan sebagai bagian alat. */
+  function bangunLimpasan() {
+    var d = jalurLimpas();
+    return '' +
+      '<g>' +
+        /* sama seperti pipa pesat: dinding gelap lalu air di dalamnya */
+        '<path d="' + d + '" fill="none" stroke="#41566b" stroke-width="13" stroke-linecap="round"/>' +
+        '<path d="' + d + '" fill="none" stroke="#6f8ba3" stroke-width="7" stroke-linecap="round"/>' +
+        /* katup bypass di titik percabangan, sedikit menonjol dari jalur pipa */
+        '<circle cx="499" cy="396.4" r="8" fill="#8a6a12" stroke="#5c4609" stroke-width="2"/>' +
+        '<path id="plta-jalur-limpas" d="' + d + '" fill="none" stroke="none"/>' +
+        '<g id="plta-partikel-limpas"></g>' +
+        /* Label: piring gelap seperti label "Pipa pesat", supaya tetap >= 4,5:1
+           di atas gradasi tanah. Ditaruh di kiri jalur, di bawah label "Pipa
+           pesat" (y 392-410) dan tidak menimpa dinding gedung (x1 = 545). */
+        '<rect id="plta-limpas-piring" x="358" y="428" width="106" height="18" rx="4" ' +
+          'fill="#41566b" opacity=".92"/>' +
+        '<text id="plta-limpas-teks" x="411" y="441" text-anchor="middle" font-size="12" ' +
+          'font-weight="600" fill="#ffffff">Saluran limpasan</text>' +
+      '</g>';
+  }
+
   function bangunPipa() {
     var d = jalurPipa();
     return '' +
@@ -246,8 +293,12 @@ var ModulPLTA = (function () {
         '<rect x="286" y="308" width="50" height="18" rx="4" fill="#44535f" opacity=".92"/>' +
         '<text x="311" y="321" text-anchor="middle" font-size="12" font-weight="600" fill="#ffffff">Intake</text>' +
       '</g>' +
-      /* jet air dari nosel ke roda turbin */
-      '<g id="plta-partikel-jet"></g>';
+      /* jet air dari nosel ke roda turbin. Partikel air di DALAM drum punya
+         grupnya sendiri: keduanya bergerak dengan aturan berbeda, dan
+         mencampurnya di satu grup membuat "berapa butir yang terlihat"
+         ambigu — yang dihitung jadi campuran jet dan isi drum. */
+      '<g id="plta-partikel-jet"></g>' +
+      '<g id="plta-partikel-dalam"></g>';
   }
 
   /* ----------------------------------------------------------------- waduk */
@@ -291,6 +342,7 @@ var ModulPLTA = (function () {
         bangunWaduk() +
         bangunGedung() +
         bangunPipa() +
+        bangunLimpasan() +
         bangunGuideVane() +
         bangunTurbin() +
       '</svg>';
@@ -309,6 +361,11 @@ var ModulPLTA = (function () {
     el.jalurPipa = container.querySelector('#plta-jalur-pipa');
     el.partikelPipa = container.querySelector('#plta-partikel-pipa');
     el.partikelJet = container.querySelector('#plta-partikel-jet');
+    el.partikelDalam = container.querySelector('#plta-partikel-dalam');
+    el.jalurLimpas = container.querySelector('#plta-jalur-limpas');
+    el.partikelLimpas = container.querySelector('#plta-partikel-limpas');
+    el.limpasPiring = container.querySelector('#plta-limpas-piring');
+    el.limpasTeks = container.querySelector('#plta-limpas-teks');
     el.lampu = container.querySelector('#plta-lampu');
     el.ukur = {
       grup: container.querySelector('#plta-ukur-h'),
@@ -320,6 +377,7 @@ var ModulPLTA = (function () {
     };
 
     panjangPipa = el.jalurPipa.getTotalLength();
+    panjangLimpas = el.jalurLimpas ? el.jalurLimpas.getTotalLength() : 0;
 
     /* partikel air di dalam pipa */
     partikelPipa = [];
@@ -349,8 +407,21 @@ var ModulPLTA = (function () {
       cd.setAttribute('r', '2.8');
       cd.setAttribute('fill', '#0e5b8a');
       cd.setAttribute('opacity', '0');
-      el.partikelJet.appendChild(cd);
+      el.partikelDalam.appendChild(cd);
       partikelDalam.push({ node: cd, s: m / JUMLAH_PARTIKEL_DALAM });
+    }
+
+    /* partikel air limpasan: menuruni saluran bypass. Warnanya sengaja sama
+       dengan partikel pipa (#d5efff) supaya terbaca sebagai air yang sama,
+       hanya jalannya yang berbeda — bukan cairan lain. */
+    partikelLimpas = [];
+    for (var n = 0; n < JUMLAH_PARTIKEL_LIMPAS; n++) {
+      var cl = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      cl.setAttribute('r', '3.0');
+      cl.setAttribute('fill', '#d5efff');
+      cl.setAttribute('opacity', '0');
+      el.partikelLimpas.appendChild(cl);
+      partikelLimpas.push({ node: cl, u: n / JUMLAH_PARTIKEL_LIMPAS });
     }
 
     /* titik hujan */
@@ -425,6 +496,10 @@ var ModulPLTA = (function () {
     }
 
     /* ---- partikel air di dalam pipa : v = Q/A ---- */
+    /* Seluruh debit sungguhan memang mengalir di pipa pesat sampai titik cabang,
+       jadi jalur ini tidak diubah kapasitasnya. Yang dibagi di titik cabang
+       adalah air SETELAHNYA, dan itu diurus oleh partikel jet + saluran
+       limpasan di bawah. */
     var pxPerDetik = k.vPipa * 110 * KONFIG.kecepatanAnimasi;
     if (panjangPipa > 0) {
       for (var i = 0; i < partikelPipa.length; i++) {
@@ -437,6 +512,22 @@ var ModulPLTA = (function () {
       }
     }
 
+    /* ---- pembagian air di titik cabang ---- */
+    /* qTurbin = bagian debit yang melewati turbin, qLimpas = yang dibuang.
+       Keduanya dipakai dua kali:
+       (1) jet air ke turbin menipis saat sebagian air dibelokkan — inilah yang
+           membuat Q 0,40 dan Q 0,60 TIDAK lagi tampak sama, padahal dayanya
+           memang sudah mendatar;
+       (2) saluran limpasan hanya berisi air saat ada kelebihan.
+       Tanpa (1), gambar menyangkal angka: daya berhenti naik tetapi semua air
+       terlihat tetap masuk turbin. */
+    var qTurbin = Math.max(0, k.qTurbin !== undefined ? k.qTurbin : k.q);
+    var qLimpas = Math.max(0, k.qLimpas || 0);
+    var qTotal = qTurbin + qLimpas;
+    /* porsi air yang sampai ke turbin, 0..1 */
+    var porsiTurbin = qTotal > 0 ? qTurbin / qTotal : 0;
+    var porsiLimpas = qTotal > 0 ? qLimpas / qTotal : 0;
+
     /* ---- partikel jet : v = akar(2gH) ---- */
     /* Air masuk ke sisi kiri drum crossflow, sedikit di atas sumbu roda — di
        situlah mulut masuk turbin crossflow yang sebenarnya. */
@@ -446,13 +537,39 @@ var ModulPLTA = (function () {
     var dx = masukX - nosel.x;
     var dy = masukY - nosel.y;
     var pxJet = k.vJet * 12 * KONFIG.kecepatanAnimasi;
+    /* Ambang tampil per partikel: partikel dengan nomor urut di atas porsi
+       turbin disembunyikan. Efeknya jet menipis secara bertahap (0,60 m³/s
+       menyisakan 2 dari 3 bagian), bukan tiba-tiba hilang. */
     for (var j = 0; j < partikelJet.length; j++) {
       var q = partikelJet[j];
+      var tampakJet = (j + 0.5) / partikelJet.length <= porsiTurbin + 0.0001;
       q.u += (pxJet * dt) / Math.max(1, Math.abs(dx));
       if (q.u > 1) { q.u -= 1; }
       q.node.setAttribute('cx', (nosel.x + dx * q.u).toFixed(1));
       q.node.setAttribute('cy', (nosel.y + dy * q.u).toFixed(1));
-      q.node.setAttribute('opacity', String(0.25 + 0.75 * (1 - q.u)));
+      q.node.setAttribute('opacity', tampakJet ? String(0.25 + 0.75 * (1 - q.u)) : '0');
+    }
+
+    /* ---- partikel limpasan: menuruni saluran bypass ---- */
+    /* Jumlahnya mengikuti porsi yang benar-benar dibuang, jadi pada
+       Q <= Q_kapasitas salurannya kosong dan pada Q = 0,60 m³/s isinya penuh.
+       Kecepatan tampaknya diskalakan (bukan v = Q/A) karena saluran ini digambar
+       terpotong, hanya ~78 unit, padahal di lapangan menerus ke hilir. */
+    var pxLimpas = Math.max(0, 40 * porsiLimpas) * KONFIG.kecepatanAnimasi;
+    for (var n = 0; n < partikelLimpas.length; n++) {
+      var pl = partikelLimpas[n];
+      var tampakLimpas = panjangLimpas > 0 &&
+        (n + 0.5) / partikelLimpas.length <= porsiLimpas + 0.0001;
+      if (tampakLimpas) {
+        pl.u += (pxLimpas * dt) / panjangLimpas;
+        if (pl.u >= 1) { pl.u -= 1; }
+        var titikL = el.jalurLimpas.getPointAtLength(pl.u * panjangLimpas);
+        pl.node.setAttribute('cx', titikL.x.toFixed(1));
+        pl.node.setAttribute('cy', titikL.y.toFixed(1));
+        pl.node.setAttribute('opacity', String(0.3 + 0.65 * (1 - pl.u)));
+      } else {
+        pl.node.setAttribute('opacity', '0');
+      }
     }
 
     /* ---- air di dalam drum: menembus sudu dua kali ---- */

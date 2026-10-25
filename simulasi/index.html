@@ -36,7 +36,9 @@
       <div class="kendali-tombol">
         <button type="button" class="tombol utama" id="btnStart">Mulai</button>
         <button type="button" class="tombol" id="btnPause" disabled>Jeda</button>
-        <button type="button" class="tombol" id="btnUlangi" disabled>Ulangi Percobaan</button>
+        <button type="button" class="tombol" id="btnUlangi" disabled
+                title="Mengulang percobaan dari nol. Data yang sudah dicatat TIDAK dihapus."
+                aria-describedby="ketTombol">Ulangi Percobaan</button>
         <button type="button" class="tombol catat" id="btnCatatBilah" disabled>Catat Data</button>
       </div>
       <div class="kotak-timer">
@@ -45,6 +47,10 @@
         <span class="timer-jam" id="timerJam">= 0,0000 jam</span>
       </div>
     </div>
+    <!-- Dua tombol ini mudah tertukar: satu mengulang percobaan, satu menghapus
+         data. Bedanya dinyatakan terang-terangan di sini, bukan dibiarkan
+         ditemukan lewat dialog konfirmasi. -->
+    <p class="catatan-kecil" id="ketTombol"><strong>Ulangi Percobaan</strong> mengembalikan percobaan ke nol dan data tetap tersimpan. <strong>Hapus Semua Data</strong> (di panel Data &amp; Analisis) membuang seluruh baris tabel.</p>
     <p class="pesan-status" id="pesanStatus" role="status" aria-atomic="true">Atur debit dan tinggi jatuh air, lalu tekan Mulai.</p>
   </section>
 
@@ -53,6 +59,10 @@
 
     <section class="kartu" aria-label="Hasil pengukuran">
       <h2 class="kartu-judul">Hasil Pengukuran</h2>
+      <!-- Tiga keluaran, dan ketiganya benar-benar hasil ukur percobaan:
+           daya, energi, dan putaran. Tinggi jatuh air bukan hasil ukur (itu
+           besaran yang DIATUR lewat slider), jadi tidak ditaruh di sini —
+           keterangannya menempel pada slidernya sendiri di bawah. -->
       <div class="kisi-keluaran">
         <div class="keluaran">
           <span class="keluaran-label">Daya</span>
@@ -65,10 +75,6 @@
         <div class="keluaran">
           <span class="keluaran-label">Putaran turbin</span>
           <span class="keluaran-nilai"><span id="nilaiRpm">0</span> <em>rpm</em></span>
-        </div>
-        <div class="keluaran">
-          <span class="keluaran-label">Tinggi jatuh air</span>
-          <span class="keluaran-nilai kecil"><span id="nilaiHead">15,0 m · 60 % dari maksimum situs</span></span>
         </div>
       </div>
       <p class="catatan-kecil" id="catatanEnergi">Energi dihitung dari durasi percobaan yang sedang berjalan.</p>
@@ -88,8 +94,16 @@
           <label for="sliderQ">Debit air (Q)</label>
           <output class="pengatur-nilai" id="nilaiQ">0,30 m³/s</output>
         </div>
-        <input type="range" id="sliderQ" min="0.05" max="0.60" step="0.01" value="0.30">
+        <div class="pengatur-trek" id="trekQ">
+          <input type="range" id="sliderQ" min="0.05" max="0.60" step="0.01" value="0.30"
+                 aria-describedby="ketKapasitas">
+          <!-- Penanda kapasitas: garis di trek pada Q = 0,40 m³/s. Tanpa ini,
+               batas turbin hanya terlihat di panel Rumus (yang tertutup) dan di
+               catatan yang baru muncul SESUDAH debit dilewati. -->
+          <span class="penanda-trek" id="penandaKapasitas" aria-hidden="true"></span>
+        </div>
         <div class="pengatur-kaki"><span id="minQ">0,05</span><span id="maksQ">0,60 m³/s</span></div>
+        <p class="catatan-kecil" id="ketKapasitas">Garis pada 0,40 m³/s = kapasitas turbin. Debit di atasnya melimpas dan tidak menambah daya.</p>
       </div>
 
       <div class="pengatur">
@@ -97,8 +111,10 @@
           <label for="sliderH">Tinggi jatuh air (head, H)</label>
           <output class="pengatur-nilai" id="nilaiH">15,0 m</output>
         </div>
-        <input type="range" id="sliderH" min="4" max="25" step="0.5" value="15">
+        <input type="range" id="sliderH" min="4" max="25" step="0.5" value="15"
+               aria-describedby="ketHead">
         <div class="pengatur-kaki"><span id="minH">4 m</span><span id="maksH">25 m</span></div>
+        <p class="catatan-kecil" id="ketHead">15,0 m — 60 % dari maksimum situs (25 m). Bukan hasil pengukuran, melainkan perbandingan dengan situs ini.</p>
       </div>
 
       <div class="pengatur">

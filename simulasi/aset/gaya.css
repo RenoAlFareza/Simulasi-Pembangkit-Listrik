@@ -295,12 +295,29 @@ h1, h2 { margin: 0; font-weight: 650; }
   font-size: .7rem;
   color: var(--tinta-lemah);
 }
+/* Trek slider + penanda kapasitas. Pembungkusnya position:relative supaya
+   penanda bisa diletakkan dengan persentase terhadap lebar trek, bukan lebar
+   kartu. Tidak ada elemen tambahan yang menangkap klik: penanda diberi
+   pointer-events:none agar slider tetap bisa ditarik di titik mana pun. */
+.pengatur-trek { position: relative; }
+.penanda-trek {
+  position: absolute;
+  top: 7px;
+  height: 12px;
+  width: 2px;
+  margin-left: -1px;
+  border-radius: 1px;
+  background: var(--merah, #a01d12);
+  pointer-events: none;
+}
 input[type="range"] {
   width: 100%;
   margin: 0px 0;
   accent-color: var(--biru);
   height: 26px;
   cursor: pointer;
+  position: relative;
+  z-index: 1;
 }
 input[type="range"]:disabled { cursor: not-allowed; opacity: .55; }
 .pilih-durasi { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }

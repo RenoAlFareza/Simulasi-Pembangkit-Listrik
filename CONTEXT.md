@@ -142,6 +142,26 @@ Batas debit yang bisa dilewatkan turbin: **`qKapasitas = 0,40 m³/s`**. Air di a
   bukti adanya batas; kurva η menambah tiga konstanta dan membuat hubungan tidak monoton — beban
   kognitif tanpa pemahaman tambahan.
 
+### Limpasan (spill) — SEPAKAT harus TERLIHAT (Ronde 3, Q1 = A)
+Air di atas kapasitas **wajib terlihat membelok keluar**, bukan hanya tertulis di catatan.
+**Diputuskan:** sebagian partikel jet disembunyikan mengikuti `Q_limpasan/Q_total` (sehingga pada
+0,60 m³/s hanya 2/3 jet yang tampak), dan saluran bypass di titik cabang pipa terisi partikel air
+sebanding porsi limpasan. Saluran itu digambar sebagai **pipa terkubur** menurun keluar tepi bawah
+gambar, bukan pita air di permukaan — sebab pipa pesat di gambar memang terbenam di bawah lereng,
+jadi air yang tampak "jatuh di atas rumput" akan salah secara visual.
+Alasan tidak cukup angka saja: pada H tetap, Q 0,40 dan Q 0,60 dulu menghasilkan jet, isi drum, dan
+lampu indikator yang **identik**; hanya partikel pipa yang berbeda. Murid akan menyimpulkan semua air
+masuk turbin, padahal dayanya sudah mendatar — gambar menyangkal angka.
+Catatan pemisahan grup: air di dalam drum punya grup SVG sendiri (`#plta-partikel-dalam`), tidak
+dicampur ke `#plta-partikel-jet`, supaya "berapa butir yang terlihat" tidak ambigu.
+
+### Penanda kapasitas pada slider — SEPAKAT (Ronde 3, Q2 = A)
+Batas 0,40 m³/s dulu hanya ada di panel Rumus (tertutup) dan di catatan yang baru muncul **setelah**
+debit dilewati. **Diputuskan:** satu garis penanda di trek slider debit pada posisi 0,40 m³/s,
+berlabel "kapasitas turbin".
+Penanda **disembunyikan** bila kapasitas berada di luar jangkauan slider (preset Kemarau berhenti di
+0,20 m³/s) — garis yang menempel di ujung trek akan berbohong tentang posisinya.
+
 ### Energi (E) — SEPAKAT (Ronde 1, Q3; Ronde 2, Q4 & Q5)
 Keluaran pengukuran dalam kWh. Tidak ada di proposal; ini tambahan permintaan penulis. Definisi
 yang dipakai `E = P_out × t` dengan `t` = durasi percobaan dalam **detik**; 1 detik simulasi =
@@ -172,9 +192,15 @@ Empat ambang (`ambangWaduk` di `konfigurasi.js`) dan fungsi `kondisiWaduk()` di 
 situs"** — memakai `h/hMaks` terhadap batas global 25 m. Tidak ada nama kondisi, tidak ada warna
 status. Kata "waduk" tidak lagi dipakai untuk menyatakan apa pun tentang tinggi.
 
-**Yang harus ikut dibereskan:** empat kalimat `keterangan` preset menyebut "muka waduk surut" dan
-"waduk penuh". Itu **salah** setelah Q2=A, karena muka air di gambar hanya digerakkan slider head.
-Kalimatnya ditulis ulang agar hanya menyebut **debit** dan **langit**.
+**Koreksi Ronde 3, Q3 = B:** baris itu dulu ditaruh di **panel Hasil Pengukuran**. Itu salah tempat:
+panel tersebut memuat hasil **ukur** percobaan (daya, energi, putaran), sedangkan head adalah besaran
+yang **diatur** murid lewat slider — bukan sesuatu yang diukur simulasi. Baris keempat dihapus dari
+panel, dan persentasenya dipindah ke label slider head (`#ketHead`). Sekarang panel hanya berisi tiga
+keluaran, dan ketiganya benar-benar hasil ukur.
+
+### Yang harus ikut dibereskan — SUDAH (verifikasi Ronde 3)
+Empat kalimat `keterangan` preset yang semula menyebut "muka waduk surut" dan "waduk penuh" sudah
+ditulis ulang agar hanya menyebut **debit** dan **langit**.
 
 ---
 
@@ -236,18 +262,21 @@ sudu melintang selebar drum + *guide vane* di mulut nosel, jet dipertahankan. Al
 label saja membuat teks dan gambar saling menyangkal, dan itu cacat yang sama dengan temuan no. 3.
 Keputusan ini juga konsekuensi dari Q1 Ronde 1 = "realistis visual", bukan tambahan hiasan.
 
-### Start / Pause / Reset — KABUR (belum pernah ditanyakan)
+### Start / Pause / Reset — SEPAKAT (Ronde 3, Q4 = A)
 Permintaan penulis: tombol jelas di bawah visualisasi.
-**Diputuskan sebagian (sudah berjalan di kode):** tombol "Mulai" mengunci pengatur dan memulai fase
-pemulihan; "Jeda" menghentikan jam simulasi (waktu tidak berjalan saat jeda); "Ulangi Percobaan"
-mengembalikan percobaan ke nol **tanpa menghapus data yang sudah dicatat** (ada pesan
-"Tabel data tetap tersimpan"); penghapusan data punya tombol sendiri ("Hapus Semua Data") yang
-meminta konfirmasi.
-*Ambiguitas terbuka:* naskah di atas adalah perilaku yang kebetulan sudah ada, bukan hasil keputusan
-sadar. Yang belum diputuskan: (a) apakah "Reset" seharusnya berarti "kembalikan percobaan" atau
-"hapus semua data" — dua arti yang mudah tertukar dan berbahaya bagi data murid; (b) apakah Pause
-boleh dipakai murid untuk "mengakali" durasi, karena energi dihitung dari jam simulasi sehingga jeda
-tidak menambah energi.
+**Diputuskan (Ronde 3, Q4 = A):** dua tombol dipertahankan dan **tidak digabung** —
+"Ulangi Percobaan" (kembalikan percobaan ke nol, data tetap) dan "Hapus Semua Data" (buang seluruh
+baris tabel, dengan konfirmasi). Alasannya: keduanya melakukan hal yang berbeda pada barang yang
+berbeda — satu pada percobaan yang sedang berjalan, satu pada arsip. Menggabungkannya ke satu tombol
+dengan dialog pilihan justru membuat murid harus membaca dialog setiap kali hanya ingin mengulang,
+dan satu salah klik menghapus pekerjaan satu kelompok.
+Bedanya kini dinyatakan **tertulis di halaman** (`#ketTombol` di bawah bilah kendali), bukan hanya
+ditemukan lewat dialog konfirmasi, karena kesalahan paling mahal di sini adalah menekan tombol yang
+salah lalu menyetujui dialog tanpa membacanya.
+Perilaku yang berjalan: "Mulai" mengunci pengatur dan memulai fase pemulihan 2 detik; "Jeda"
+menghentikan jam simulasi sehingga tidak menambah energi; "Lanjut" meneruskan dari titik jeda.
+*Sisa yang sengaja dibiarkan:* kata "Reset" tidak dipakai di antarmuka sama sekali — tiga tombol
+disebut dengan namanya masing-masing — sehingga tidak ada istilah ambigu yang perlu ditafsirkan.
 
 ---
 

@@ -92,24 +92,35 @@ grafik Debit–Daya mendapat siku yang jelas sebagai bukti adanya batas.
 - Mengunci variabel selama pengukuran sekaligus melatih **pengendalian variabel**, yang merupakan
   bagian dari penalaran penyelidikan.
 
-## 5. Keluaran pengukuran (dipertahankan persis empat)
+## 5. Keluaran pengukuran (tiga keluaran, semuanya hasil ukur)
 
 | Keluaran | Satuan | Sumber |
 |---|---|---|
 | Daya | kW (2 desimal) | `P_out = η·ρ·g·Q_eff·H` |
 | Energi | kWh (3 desimal) | `E = P_out × t` |
 | RPM | rpm (bulat) | `n = n₀·√((Q_eff·H)/(Q₀·H₀))` |
-| Tinggi jatuh air | m + persen dari maksimum situs | `H` dan `H / 25 m` |
 
-Keluaran keempat **bukan lagi "Kondisi waduk"**. Alasannya: setelah head dilepas dari preset,
-waduk tidak punya ketinggian sendiri di dalam model — yang ada hanya head situs yang diatur murid.
-Menuliskan "Penuh / Normal / Rendah / Kritis" akan mengarang pengukuran yang tidak pernah
-dilakukan. Yang ditampilkan sekarang adalah **"Tinggi jatuh air: 15,0 m · 60 % dari maksimum
-situs"**, yaitu perbandingan terhadap jangkauan slider, dan itu dinyatakan terang-terangan supaya
-tidak dikira pembacaan alat.
+Keluaran keempat **dihapus dari panel ini** (keputusan Ronde 3, Q3 = B). Riwayatnya: dulu "Kondisi
+waduk" (Penuh/Normal/Rendah/Kritis), lalu sejak Ronde 2 menjadi baris "Tinggi jatuh air: 15,0 m ·
+60 % dari maksimum situs". Keduanya sama-sama salah tempat, karena panel ini memuat hasil **ukur**
+percobaan sedangkan head adalah besaran yang **diatur** murid lewat slider — bukan sesuatu yang
+diukur simulasi. Sekarang panel hanya memuat tiga keluaran, dan ketiganya benar-benar hasil ukur.
+
+Persentase terhadap maksimum situs tidak hilang; ia **pindah ke label slider head**:
+*"25,0 m — 100 % dari maksimum situs (25 m). Bukan hasil pengukuran, melainkan perbandingan dengan
+situs ini."* Di sana ia melekat pada pengatur yang memang mengubahnya, dan pengakuan "bukan hasil
+pengukuran" muncul bersamaan dengan angkanya.
 
 Bila debit melebihi kapasitas turbin, panel ini menambah catatan eksplisit: *"Debit 0,60 m³/s
 melebihi kapasitas turbin 0,40 m³/s: 0,20 m³/s melimpas dan tidak menambah daya."*
+
+**Penanda kapasitas pada slider debit** (keputusan Ronde 3, Q2 = A): satu garis tipis warna merah di
+trek slider pada posisi 0,40 m³/s, dengan keterangan di bawahnya *"Garis pada 0,40 m³/s = kapasitas
+turbin. Debit di atasnya melimpas dan tidak menambah daya."* Sebelum ini, batas hanya disebut di
+panel Rumus (yang tertutup secara bawaan) dan di catatan yang baru muncul **setelah** debit
+dilewati — murid menemukan batasnya dengan menabraknya. Penanda **disembunyikan** saat kapasitas
+berada di luar jangkauan slider (preset Kemarau berhenti di 0,20 m³/s), karena garis yang menempel
+di ujung trek akan berbohong tentang posisinya.
 
 ## 6. Panel Data & Analisis
 
@@ -218,8 +229,26 @@ membuat gambar dan teks saling menyangkal. Crossflow memakai nosel **dan** jet (
 akal pada head rendah.
 
 Turbin juga memakai **kapasitas** 0,40 m³/s. Pada debit di atasnya, drum sudah penuh: daya dan
-putaran mendatar, dan sisa air tampak melimpas. Inilah satu-satunya "batas alat" yang ditampilkan,
-dan ia sengaja supaya sumbu Debit–Daya punya siku yang bisa dibaca sebagai bukti kapasitas.
+putaran mendatar, dan sisa air **terlihat melimpas**. Inilah satu-satunya "batas alat" yang
+ditampilkan, dan ia sengaja supaya sumbu Debit–Daya punya siku yang bisa dibaca sebagai bukti
+kapasitas.
+
+**Limpasan harus terlihat, bukan hanya tertulis** (keputusan Ronde 3, Q1 = A). Sebelum ini, pada
+head tetap debit 0,40 dan 0,60 menghasilkan jet, isi drum, dan lampu indikator yang **identik** —
+hanya partikel di dalam pipa yang berbeda. Gambar menyangkal angka: daya sudah mendatar tetapi
+semua air tampak tetap masuk turbin, sehingga murid wajar menyimpulkan kapasitas itu tidak ada.
+Sekarang:
+
+- **Sebagian partikel jet disembunyikan** mengikuti `Q_limpasan/Q_total`. Pada 0,60 m³/s porsi
+  turbin 2/3, jadi jet tampak 2/3 penuh — menipis bertahap, tidak tiba-tiba hilang.
+- **Saluran bypass** digambar mulai dari katup di titik cabang pipa pesat, menurun keluar tepi
+  bawah gambar, dan **terisi partikel air sebanding porsi limpasan**. Pada Q ≤ kapasitas saluran
+  ini kosong.
+- Saluran itu digambar sebagai **pipa terkubur**, bukan pita air di permukaan lereng: pipa pesat di
+  gambar memang terbenam di bawah tanah (pada x = 499 tanah di y ≈ 349 sedangkan pipa di y ≈ 396),
+  jadi air yang tampak "jatuh di atas rumput" akan salah secara visual.
+- Air di dalam drum diberi grup SVG sendiri (`#plta-partikel-dalam`), terpisah dari
+  `#plta-partikel-jet`, supaya "berapa butir yang terlihat" selalu bermakna satu hal.
 
 ## 9. Kontrol
 
@@ -241,7 +270,15 @@ Di panel Data & Analisis (jauh dari area klik yang ramai, supaya tidak tertekan 
 
 Pemisahan dua tombol reset ini disengaja: di kelas, hampir pasti ada kelompok yang menekan reset
 setelah mencatat data. Kalau satu tombol menghapus tabel sekaligus, pekerjaan satu pertemuan bisa
-hilang.
+hilang. **Ditegaskan pada Ronde 3 (Q4 = A)** bahwa keduanya tetap dua tombol: keduanya bekerja pada
+barang yang berbeda — satu pada percobaan yang sedang berjalan, satu pada arsip. Menggabungkannya
+menjadi satu tombol dengan dialog pilihan memaksa murid membaca dialog setiap kali hanya ingin
+mengulang, dan satu salah klik menghapus pekerjaan satu kelompok.
+
+Bedanya sekarang **tertulis di halaman**, bukan hanya bisa ditemukan lewat dialog konfirmasi:
+*"Ulangi Percobaan mengembalikan percobaan ke nol dan data tetap tersimpan. Hapus Semua Data (di
+panel Data & Analisis) membuang seluruh baris tabel."* Tombol Ulangi juga diberi `title` dan
+`aria-describedby` yang menunjuk keterangan itu.
 
 **Durasi ikut terkunci.** Setelah baris pertama tersimpan, tombol durasi nonaktif sampai seluruh
 data dihapus. Sebabnya: satu tabel data = satu aktivitas, dan energi antarbaris dengan durasi
@@ -249,9 +286,9 @@ berbeda bukan pembanding yang sah. Ini cermin dari cara preset dikunci, dan alas
 mengendalikan variabel. Keterangan di bawah tombol menyebutkan mengapa terkunci dan apa yang harus
 dilakukan untuk membukanya.
 
-*Catatan:* arti kata "Reset" belum pernah diputuskan secara sadar. Perilaku yang sekarang berjalan
-(dua tombol terpisah) adalah pilihan yang aman bagi data murid, tetapi belum ada keputusan resmi
-apakah "kembalikan percobaan" dan "hapus semua data" memang harus dua tombol berbeda.
+*Catatan:* istilah **"Reset" tidak dipakai di antarmuka sama sekali** — ketiga tombol disebut dengan
+namanya masing-masing ("Mulai", "Jeda"/"Lanjut", "Ulangi Percobaan"). Dengan begitu tidak ada istilah
+ambigu yang perlu ditafsirkan murid, dan tidak ada tombol yang artinya bergantung pada kebiasaan.
 
 ## 10. Peta ke tahapan pembelajaran
 
@@ -316,12 +353,14 @@ simulasi/
 - **Nilai `qKapasitas`** (kini 0,40 m³/s) juga perlu dikonfirmasi ke pembimbing: itu batas turbin
   yang dipilih supaya daya puncak masuk wilayah PLTMH, bukan angka dari proposal.
 - Modul **PLTS** dan **PLTB** menyusul setelah modul PLTA disetujui.
-- **Arti tombol reset** belum diputuskan secara sadar (§9): apakah "kembalikan percobaan" dan
-  "hapus semua data" harus tetap dua tombol, atau digabung dengan konfirmasi.
+- **Status kata "Reset"** (§9): istilah itu kini tidak dipakai di antarmuka sama sekali — tiga tombol
+  disebut dengan namanya masing-masing. Dua tombol reset (Ulangi Percobaan vs Hapus Semua Data)
+  **sudah diputuskan tetap dua** (Ronde 3, Q4 = A); yang belum adalah apakah pembimbing ingin istilah
+  "Reset" muncul secara eksplisit di panduan guru/LKM meski tidak ada di tombol.
 
 ## 14. Hasil verifikasi modul PLTA
 
-Modul PLTA sudah berjalan dan diuji, bukan baru dirancang. Dua penguji dipakai, keduanya disimpan
+Modul PLTA sudah berjalan dan diuji, bukan baru dirancang. Empat penguji dipakai, semuanya disimpan
 di `_analysis/` supaya bisa dijalankan ulang kapan saja.
 
 **Penguji model** (`_analysis/uji-model.js`) menjalankan `konfigurasi.js` dan `fisika.js` di dalam
@@ -345,10 +384,9 @@ Daya keluaran 1,47–73,58 kW · putaran 190–1.342 rpm · energi @60 s 0,025�
 **Penguji antarmuka** (`_analysis/uji-peramban.js`) mengendalikan halaman sungguhan lewat Chrome
 DevTools Protocol: klik nyata, waktu nyata, bacaan DOM nyata, tangkapan layar nyata. Tiga percobaan
 30 detik dijalankan berurutan (Mendung 0,50/22 · Hujan 0,60/25 · Hujan 0,35/25):
-
 | Yang diuji | Hasil |
 |---|---|
-| Durasi nyata tiap percobaan | 32,07 · 32,08 · 32,08 detik — 2 detik pemulihan + 30 detik berjalan, galat < 0,3 % |
+| Durasi nyata tiap percobaan | 32,05 · 32,04 · 32,08 detik — 2 detik pemulihan + 30 detik berjalan, galat < 0,3 % |
 | Timer di layar saat berhenti | `00:30` untuk ketiga percobaan |
 | Energi terhadap `E = P × t` | 0,540 · 0,613 · 0,536 kWh; P_out 64,75 · 73,58 · 64,38 kW |
 | Efek kapasitas | Hujan 0,60 m³/s dan 0,40 m³/s sama-sama 73,58 kW — melimpas tidak menambah daya |
@@ -358,7 +396,21 @@ DevTools Protocol: klik nyata, waktu nyata, bacaan DOM nyata, tangkapan layar ny
 | Tabel pada layar 390 px | 342 px di dalam 342 px — tidak ada kolom terpotong, halaman tidak meluber |
 | Galat halaman | tidak ada |
 
-Tiga cacat ditemukan pengujian ini dan sudah diperbaiki:
+**Penguji limpasan** (`_analysis/uji-limpasan.js`) memeriksa apakah limpasan benar-benar
+**tergambar**, bukan sekadar tertulis: ia menghitung partikel jet dan partikel saluran limpasan yang
+opacity-nya > 0,05 (dibaca dari atribut `opacity`, karena `modul-plta.js` menyetelnya lewat
+`setAttribute`). **Lulus 7, gagal 0**:
+
+| Kondisi | Partikel jet terlihat | Partikel limpasan terlihat |
+|---|---|---|
+| Q 0,30 m³/s (di bawah kapasitas) | 9 / 9 | 0 / 6 |
+| Q 0,40 m³/s (tepat kapasitas) | 9 / 9 | 0 / 6 |
+| Q 0,60 m³/s (porsi turbin 2/3) | 6 / 9 | 2 / 6 |
+
+Baris terakhir itulah intinya: **gambar 0,40 dan 0,60 sekarang berbeda**, padahal dayanya sama-sama
+73,58 kW. Sebelumnya ketiganya tampil identik.
+
+Lima cacat ditemukan pengujian ini dan sudah diperbaiki:
 
 1. **Jejak RPM tersimpan dua kali.** "Catat Data" menyimpan kurva percobaan, lalu "Ulangi
    Percobaan" menyimpannya lagi karena kurva itu belum ditandai tersimpan. Akibatnya 3 percobaan
@@ -370,6 +422,13 @@ Tiga cacat ditemukan pengujian ini dan sudah diperbaiki:
 3. **Sumbu grafik melompat terlalu jauh.** Untuk data 110 kW sumbu naik ke 200 kW sehingga separuh
    bidang kosong. Tangga pembulatan diganti menjadi 1 · 1,2 · 1,5 · 2 · 2,5 · 3 · 4 · 5 · 6 · 8 · 10,
    kini sumbu berhenti di 120 kW.
+4. **(Ronde 3) Blok animasi jet tertulis dua kali.** Saat pertama kali limpasan ditambahkan, satu
+   blok jet lama tertinggal di bawah blok baru, sehingga nilai opacity yang sudah memperhitungkan
+   limpasan **ditimpa** oleh versi lama yang selalu menampilkan semua partikel. Akibatnya limpasan
+   tidak pernah terlihat walau kodenya benar. Ditemukan oleh penguji limpasan, bukan oleh mata.
+5. **(Ronde 3) Partikel dalam drum menumpang di grup jet.** `#plta-partikel-jet` berisi partikel jet
+   **dan** partikel drum, membuat "berapa butir yang terlihat" ambigu dan penguji menghitung
+   campuran keduanya. Dipisah ke grup `#plta-partikel-dalam` sendiri.
 
 Catatan penyimpangan dari rancangan awal, semuanya disengaja:
 
@@ -520,14 +579,39 @@ Tiga cacat yang diperbaiki berkat wawancara ini, dan akibatnya bila dibiarkan:
 Dua hal yang **belum** diputuskan dan sengaja dibiarkan terbuka: arti tombol reset (§9) dan
 penamaan akhir kolom tabel setelah E-LKM disetujui (§13).
 
-### 15.10 Hasil verifikasi setelah revisi
+### 15.10 Keputusan Ronde 3 (grill lanjutan dengan penulis)
+
+| No | Pertanyaan | Keputusan | Akibat |
+|---|---|---|---|
+| R3 Q1 | Limpasan tidak terlihat sama sekali | **A — gambar limpasan** | partikel jet menipis mengikuti porsi turbin; saluran bypass terisi sebanding porsi limpasan |
+| R3 Q2 | Batas 0,40 m³/s tidak terlihat di slider | **A — penanda kapasitas** | satu garis di trek slider + keterangan; disembunyikan bila di luar jangkauan preset |
+| R3 Q3 | Baris "tinggi jatuh air" ada di panel hasil | **B — hapus dari panel, pindah ke label slider** | panel hanya memuat 3 keluaran yang semuanya hasil ukur |
+| R3 Q4 | Dua tombol reset membingungkan | **A — pertahankan dua tombol, perjelas label** | keterangan tertulis di halaman + `title`/`aria-describedby` pada tombol Ulangi |
+
+Empat cacat yang diperbaiki berkat Ronde 3, dan akibatnya bila dibiarkan:
+
+1. **Limpasan tidak tergambar.** Pada head tetap, Q 0,40 dan 0,60 tampak identik — hanya partikel
+   pipa yang berbeda. Gambar menyangkal angka; murid menyimpulkan semua air masuk turbin padahal
+   dayanya sudah mendatar.
+2. **Batas kapasitas hanya di panel tertutup.** Murid menemukan batas 0,40 m³/s dengan menabraknya,
+   bukan dengan melihatnya.
+3. **Besaran yang diatur ditaruh di panel hasil ukur.** Mencampur "yang saya atur" dan "yang saya
+   ukur" di satu kotak adalah sumber miskonsepsi tentang apa yang sebenarnya diukur percobaan ini.
+4. **Dua tombol reset tanpa keterangan.** Kesalahan paling mahal di kelas: menekan tombol yang salah
+   lalu menyetujui dialog tanpa membacanya.
+
+Dua hal yang **belum** diputuskan dan sengaja dibiarkan terbuka: penamaan akhir kolom tabel setelah
+E-LKM disetujui (§13), dan status kata "Reset" yang kini tidak dipakai di antarmuka (§9).
+
+### 15.11 Hasil verifikasi setelah revisi
 
 | Pengujian | Hasil |
 |---|---|
 | Penguji model | LULUS 34, GAGAL 0 |
 | Kriteria penerimaan tiket #1–#8 | 50 dari 50 lulus |
-| Penguji perilaku keputusan Ronde 1 & 2 | LULUS 19, GAGAL 0 |
-| Regresi tiga percobaan 30 detik | LULUS; durasi nyata 32,07 · 32,08 · 32,08 detik (galat maks 0,25 %); 3 baris data; legenda 4 entri; galat halaman 0 |
+| Penguji perilaku keputusan Ronde 1, 2 & 3 | LULUS 27, GAGAL 0 |
+| Penguji limpasan yang terlihat | LULUS 7, GAGAL 0 |
+| Regresi tiga percobaan 30 detik | LULUS; durasi nyata 32,05 · 32,04 · 32,08 detik (galat maks 0,25 %); 3 baris data; legenda 4 entri; galat halaman 0 |
 | Kontras | 0 kegagalan pada teks aktif (sebelumnya 9, semuanya komponen nonaktif) |
 | Dialog Kartu Data | fokus di dalam dialog, 0 Tab keluar, fokus kembali ke tombol pembuka |
 | `prefers-reduced-motion` | roda, partikel, jet, gelombang, dan hujan beku; timer tetap berjalan |
