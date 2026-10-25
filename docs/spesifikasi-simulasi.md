@@ -360,7 +360,7 @@ simulasi/
 
 ## 14. Hasil verifikasi modul PLTA
 
-Modul PLTA sudah berjalan dan diuji, bukan baru dirancang. Empat penguji dipakai, semuanya disimpan
+Modul PLTA sudah berjalan dan diuji, bukan baru dirancang. Lima penguji dipakai, semuanya disimpan
 di `_analysis/` supaya bisa dijalankan ulang kapan saja.
 
 **Penguji model** (`_analysis/uji-model.js`) menjalankan `konfigurasi.js` dan `fisika.js` di dalam
@@ -409,6 +409,21 @@ opacity-nya > 0,05 (dibaca dari atribut `opacity`, karena `modul-plta.js` menyet
 
 Baris terakhir itulah intinya: **gambar 0,40 dan 0,60 sekarang berbeda**, padahal dayanya sama-sama
 73,58 kW. Sebelumnya ketiganya tampil identik.
+
+**Penguji garis model** (`_analysis/uji-garis-model.js`) memeriksa kebalikan dari penguji antarmuka:
+tiga percobaan dengan **head sama** (15,0 m) dan debit berbeda (0,10 · 0,20 · 0,30 m³/s). Di sini
+garis model **harus muncul** dan keterangannya harus menyebut head 15,0 m tanpa kata "data terakhir".
+Ketiga grafik diperiksa satu per satu:
+
+| Grafik | Keterangan yang diharapkan |
+|---|---|
+| Debit–Daya | garis digambar; "perhitungan model pada tinggi jatuh air = 15,0 m, yaitu kondisi yang sama untuk semua titik ini" |
+| Tinggi jatuh–Daya | garis TIDAK digambar; "berasal dari 3 nilai debit berbeda" |
+| Debit–Energi | garis digambar; menyebut head 15,0 m **dan** t = 30 s |
+| Tinggi jatuh–Energi | garis TIDAK digambar; menyebut debit dan durasi harus seragam |
+
+Kedua penguji antarmuka (seragam vs tidak seragam) memang dirancang berlawanan supaya aturan
+keseragaman terbukti dari dua sisi, bukan dari satu kebetulan.
 
 Lima cacat ditemukan pengujian ini dan sudah diperbaiki:
 
@@ -611,6 +626,7 @@ E-LKM disetujui (§13), dan status kata "Reset" yang kini tidak dipakai di antar
 | Kriteria penerimaan tiket #1–#8 | 50 dari 50 lulus |
 | Penguji perilaku keputusan Ronde 1, 2 & 3 | LULUS 27, GAGAL 0 |
 | Penguji limpasan yang terlihat | LULUS 7, GAGAL 0 |
+| Penguji garis model (head seragam) | LULUS; garis digambar pada Debit–Daya & Debit–Energi, tidak digambar pada kedua grafik head |
 | Regresi tiga percobaan 30 detik | LULUS; durasi nyata 32,05 · 32,04 · 32,08 detik (galat maks 0,25 %); 3 baris data; legenda 4 entri; galat halaman 0 |
 | Kontras | 0 kegagalan pada teks aktif (sebelumnya 9, semuanya komponen nonaktif) |
 | Dialog Kartu Data | fokus di dalam dialog, 0 Tab keluar, fokus kembali ke tombol pembuka |

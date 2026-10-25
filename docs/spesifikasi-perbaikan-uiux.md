@@ -544,8 +544,9 @@ kecil di bawah grafik agar tidak menutupi area plot pada layar sempit.
 
 ## 7. Metode verifikasi
 
-Perbaikan dinyatakan selesai hanya bila **ketiga** lapis pengujian berikut dijalankan ulang dan
-hasilnya disertakan.
+Perbaikan dinyatakan selesai hanya bila **lapis pengujian berikut** dijalankan ulang dan
+hasilnya disertakan. Enam lapis dipakai; nomor 1–3 sudah ada sejak awal, nomor 4–6 menyusul setelah
+keputusan hasil grill Ronde 1–3.
 
 **1. Penguji model** — memastikan tidak ada perubahan fisis yang tidak disengaja.
 Menjalankan penguji model yang sudah ada; hasil wajib tetap **34 lulus / 0 gagal** (jumlahnya naik
@@ -571,6 +572,12 @@ metadata CSV, dan siluet turbin crossflow.
 sekadar tertulis. Ia menghitung partikel jet dan partikel saluran limpasan yang benar-benar
 terlihat (opacity > 0,05) pada tiga debit, dan membuktikan bahwa 0,40 dan 0,60 m³/s tidak lagi
 identik secara visual meski dayanya sama. **7 lulus / 0 gagal.**
+
+**6. Penguji garis model** (`_analysis/uji-garis-model.js`) — pasangan berlawanan dari penguji
+antarmuka. Penguji antarmuka memakai tiga head berbeda sehingga garis model harus TIDAK digambar;
+penguji ini memakai head seragam 15,0 m dengan tiga debit sehingga garis model harus MUNCUL, dan
+keterangannya harus menyebut 15,0 m tanpa kata "data terakhir". Keempat grafik diperiksa satu per
+satu. Regresi di sini berarti aturan keseragaman patah di salah satu arah.
 
 > Catatan metode: penguji membaca atribut `opacity`, bukan `style.opacity`, karena
 > `modul-plta.js` menyetelnya lewat `setAttribute`. Penguji juga wajib menekan "Ulangi Percobaan"
