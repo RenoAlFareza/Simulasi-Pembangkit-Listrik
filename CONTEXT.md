@@ -7,10 +7,15 @@ Interaktif Terintegrasi Simulasi Virtual" (Lolita Yusnia Machfiroh, Pendidikan F
 Berkas ini hanya memuat kesepakatan istilah. Bukan dokumen desain, bukan spesifikasi teknis.
 
 Legenda status:
-- **PAKEM (dari proposal)** — istilah dan makanannya sudah ditetapkan dokumen proposal; tidak
+- **PAKEM (dari proposal)** — istilah dan maknanya sudah ditetapkan dokumen proposal; tidak
   boleh diubah tanpa merevisi proposal.
 - **SEPAKAT** — sudah diputuskan bersama penulis skripsi.
 - **KABUR** — masih ambigu; menunggu keputusan. Nomor pertanyaan merujuk ke ronde grill.
+
+> **Keadaan per rancangan 0.3.0 (Ronde 5).** Simulasi dibangun ulang total dengan **LKPD
+> praktikum sebagai kontrak tunggal**: dua variabel diubah, dua respon diamati. Istilah di
+> bawah ini sudah disesuaikan; entri yang menyatakan sesuatu yang **sudah dihapus** diberi
+> label DIBATALKAN, bukan dibuang, supaya keputusan lama tidak diulang tanpa alasan.
 
 ---
 
@@ -20,16 +25,16 @@ Legenda status:
 
 1. **Realistis mekanisme** — arah dan bentuk hubungan sebab-akibat benar: P naik dengan Q dan dengan H;
    tidak ada besaran yang melompat tanpa sebab; tidak ada hubungan yang terbalik; tidak ada pengaruh
-   yang dikarang (mis. cuaca mengubah head).
+   yang dikarang.
 2. **Realistis visual** — gambar memuat konfigurasi pembangkit yang benar: bentuk turbin cocok dengan
-   rentang head, nosel + jet hanya pada turbin impuls. Gambar **tidak wajib berskala**, tetapi
-   proporsi antarbagian tidak boleh menyangkal jenis turbinnya.
+   rentang head. Gambar **tidak wajib berskala**, tetapi proporsi antarbagian tidak boleh menyangkal
+   jenis turbinnya.
 
 Yang **tidak** dituntut: kecocokan kuantitatif ±10 % terhadap pembangkit lapangan. Angka boleh
 ilustratif selama **kesimpulan yang bisa ditarik murid** tidak salah.
 
-*Konsekuensi yang mengikat:* η = 0,75 konstan **boleh** dipertahankan (lihat η), tetapi arah pengaruh
-cuaca, garis "model" pada grafik, dan siluet turbin **wajib** benar.
+*Konsekuensi yang mengikat:* η = 0,75 konstan **boleh** dipertahankan (lihat η), tetapi arah
+pengaruh variabel dan siluet turbin **wajib** benar.
 
 ---
 
@@ -46,7 +51,7 @@ sistem yang dijanjikan proposal (PLTS, PLTA, PLTB).
 Dua modul simulasi lain yang dijanjikan proposal. PLTS: variabel utama intensitas radiasi dan luas
 panel, hubungan P ∝ I·A. PLTB: variabel utama kecepatan angin dan luas rotor, hubungan P ∝ A·v³.
 Keduanya bukan bagian dari pekerjaan saat ini, tetapi **shell/kerangka UI harus direncanakan untuk
-ketiganya** (lihat Ronde 1, Q1).
+ketiganya**.
 *Sumber: proposal Tabel 8, P0567, P0105.*
 
 ### Simulasi virtual — PAKEM (dari proposal)
@@ -62,22 +67,38 @@ tahapan Inquiry Terbimbing. Memuat petunjuk eksperimen, tabel pengamatan, pertan
 ruang hipotesis, dan ruang kesimpulan. E-LKM dan simulasi adalah **dua sistem terpisah**.
 *Sumber: proposal P0049, P0102, P0658.*
 
+### LKPD praktikum — kontrak rancangan 0.3.0
+Berkas `worksheet_8555452.pdf` (5 halaman) yang menjadi **acuan tunggal** isi antarmuka sejak
+Ronde 5. Yang diminta LKPD dan menjadi isi simulasi:
+
+| LKPD | Isi |
+|---|---|
+| D. Variabel Percobaan | P1 manipulasi **ketinggian sumber air** (kontrol: debit); P2 manipulasi **debit air** (kontrol: ketinggian) |
+| F. Langkah Kerja | "atur **tiga** harga … sambil menjaga variabel kontrol tetap sama" |
+| F. Langkah Kerja | "amati daya dan nyala LED **setelah aliran stabil**" |
+| I. Hasil Pengamatan | kolom respon: **Daya Listrik** dan **Tingkat Terang Nyala LED** |
+| B. Petunjuk | indikator respon: "Daya listrik dalam **(MW)** dan tingkat terang nyala LED" |
+
+Aturan yang berlaku sejak Ronde 5: **fitur yang tidak dapat dilacak ke LKPD tidak dipasang**,
+kecuali panel rumus yang sengaja dipertahankan penulis.
+
+**Kontradiksi internal LKPD:** bagian B menyebut "DUA kondisi", bagian F menyebut "TIGA", tabel
+hasil menyediakan tiga baris. Yang dipakai **tiga**; redaksi LKPD sebaiknya diperbaiki.
+
 Catat: proposal memakai "**murid**" (bukan "peserta didik"), sehingga lembar kerjanya adalah
 **E-LKM / LKM**, bukan LKPD. Istilah "LKPD" yang dipakai sehari-hari mengacu pada benda yang sama;
-untuk dokumen resmi pakai E-LKM. *(Ronde 1 tidak menanyakan ini; pakai E-LKM.)*
+untuk dokumen resmi pakai E-LKM.
 
 **Batasan terverifikasi (2026):** LiveWorksheets **tidak** menyediakan API/webhook/postMessage untuk
 menerima data dari aplikasi luar, dan **tidak** bisa menyematkan (iframe) aplikasi luar ke dalam
-lembar kerja. Penanaman hanya berlaku satu arah (lembar kerja LiveWorksheets ditempel ke situs
-lain). Elemen media yang bisa masuk hanya YouTube dan PowerPoint (OneDrive). Satu-satunya jalur
-keluar dari simulasi adalah elemen **Link** (membuka tab baru) + transkripsi manual ke elemen
-**Textfield**. Konsekuensi: setiap fitur "kirim data otomatis ke E-LKM" tidak mungkin di platform
-ini. Bahan: [balasan resmi tim LiveWorksheets soal integrasi](https://www.liveworksheets.com/community/q/topic/8360471/sso-or-lti),
+lembar kerja. Satu-satunya jalur keluar dari simulasi adalah elemen **Link** (membuka tab baru) +
+transkripsi manual ke elemen **Textfield**. Konsekuensi: setiap fitur "kirim data otomatis ke E-LKM"
+tidak mungkin di platform ini. Bahan: [balasan resmi tim LiveWorksheets soal integrasi](https://www.liveworksheets.com/community/q/topic/8360471/sso-or-lti),
 [daftar elemen](https://www.liveworksheets.com/help/get-started/how-do-i-make-interactive-worksheets).
 
 **Risiko retensi data:** halaman *About* menyatakan jawaban mailbox dihapus setelah 30 hari,
 sementara tim LiveWorksheets menyebut 15 hari (Maret 2026). Jangan jadikan mailbox sebagai arsip —
-ekspor segera. Bahan: [utas retensi](https://www.liveworksheets.com/community/q/topic/8381850/mrs-teacher).
+ekspor segera.
 
 ---
 
@@ -85,22 +106,25 @@ ekspor segera. Bahan: [utas retensi](https://www.liveworksheets.com/community/q/
 
 ### Debit (Q) — PAKEM (dari proposal)
 Volume air yang mengalir setiap satuan waktu. Satuan m³/s. Salah satu dari dua variabel utama PLTA
-yang dimanipulasi murid.
+yang dimanipulasi murid. Rentang slider **0,05–0,60 m³/s** (langkah 0,01).
 *Sumber: proposal P0576, Tabel 8.*
 
-### Head (H) — SEPAKAT sebagai sifat situs (Ronde 1 Q2); bruto/kotor: SEPAKAT dengan bukti
+### Ketinggian sumber air / head (H) — PAKEM (dari proposal); peran: SEPAKAT (Ronde 1 Q2)
 Tinggi jatuh air: beda ketinggian muka air waduk dengan inlet turbin. Satuan m. Variabel utama
-kedua yang dimanipulasi murid.
-**Diputuskan (Ronde 1 Q2 = A):** H adalah sifat **situs** (tinggi bendung dan topografi), bukan sifat
-musim. Rentang **4–25 m berlaku di semua skenario cuaca**; cuaca hanya mengubah debit.
+kedua yang dimanipulasi murid. Rentang slider **4–25 m** (langkah 0,5).
+**Diputuskan (Ronde 1 Q2 = A):** H adalah sifat **situs** (tinggi bendung dan topografi), bukan
+sifat musim.
 **Diputuskan dengan bukti (bukan selera):** H yang diatur murid adalah **head bruto (kotor)** —
 seluruh kehilangan tinggi sudah masuk ke dalam η, sesuai rumus 2.14/2.15, jadi tidak ada besaran
 "head bersih" yang berdiri sendiri. Bukti: dengan `A = 0,28 m²` (D = 0,597 m), f = 0,02, L = 100 m,
 kerugian gesek hanya **0,005 m (Q=0,05) / 0,087 m (Q=0,20) / 0,784 m (Q=0,60)** — maksimum **3,1 %**
 dari H = 25 m. Terlalu kecil untuk dibedakan murid, dan terlalu kecil untuk menciptakan debit
-optimum. Menambahkannya hanya menambah suku tanpa mengubah kesimpulan.
+optimum.
 *Ambiguitas lama tertutup: proposal Tabel 8 menyebut "gesekan" sebagai faktor kehilangan, tetapi
 rumus 2.14/2.15 memasukkan seluruh kehilangan ke dalam η — jadi η-lah rumah kehilangan itu, bukan H.*
+
+**Catatan istilah:** label di layar memakai **"Ketinggian sumber air — H"**, mengikuti bahasa LKPD
+("Ketinggian Sumber Air"), bukan "head". Istilah "head" hanya dipakai di dokumen teknis.
 
 ### Daya air / daya tersedia (P_air) — PAKEM (dari proposal)
 `P_air = ρ·g·Q·H` (persamaan 2.14 proposal). Daya teoretis yang tersedia pada aliran air.
@@ -108,196 +132,168 @@ rumus 2.14/2.15 memasukkan seluruh kehilangan ke dalam η — jadi η-lah rumah 
 
 ### Daya keluaran (P_out) — PAKEM (dari proposal)
 `P_out = η·ρ·g·Q·H` (persamaan 2.15 proposal). Daya yang benar-benar dihasilkan setelah efisiensi
-sistem diperhitungkan. Inilah "Daya" yang tampil sebagai keluaran pengukuran.
-*Sumber: proposal P0583–P0585.*
+sistem diperhitungkan. Inilah "**Daya listrik**" yang tampil sebagai respon pertama, dalam **kW**.
 
 Catat beda istilah: **P_air** = daya tersedia (tanpa η), **P_out** = daya keluaran (dengan η).
 Jangan menyebut keduanya "daya" tanpa pembeda — ini persis bahan analisis untuk indikator
 *analysis*.
+*Sumber: proposal P0583–P0585.*
+
+### Satuan daya: kW di layar, MW di LKPD — SEPAKAT (Ronde 2 Q6; Ronde 5 Q1)
+LKPD meminta daya dalam **MW**; simulasi menampilkan **kW**. Ini **bukan** ketidakcocokan yang
+harus dibereskan, melainkan latihan yang disengaja: konversi `MW = kW ÷ 1000` adalah bagian dari
+kompetensi.
+**Diputuskan (Ronde 5 Q1):** tampilkan kW sebagai angka utama, dan tampilkan `= 0,0662 MW` kecil
+di bawahnya sebagai **pembanding** untuk memeriksa hasil hitung siswa. Kalimat penjelas di bawah
+kotak hasil: *"LKPD meminta daya dalam MW. Simulasi menampilkan kW — bagilah dengan 1000 untuk
+mengisi kolom MW."*
 
 ### Efisiensi sistem (η) — PAKEM (dari proposal); nilai = SEPAKAT satu titik beban
 Faktor efisiensi pada persamaan 2.15 yang mempresentasikan gabungan kehilangan: gesekan,
 turbulensi, turbin, dan generator. Proposal tidak menetapkan nilainya.
 *Sumber: proposal P0583, Tabel 8.*
 
-**Diputuskan (Ronde 2, Q1 = C): η tetap 0,75 dan konstan**, tetapi **bukan** karena η nyata
-konstan — η turbin nyata berupa kurva terhadap beban. η = 0,75 adalah **satu titik beban saja**.
-Karena itu ia **tidak boleh** disebut "efisiensi turbin"; sebut **"efisiensi sistem pada titik
-beban acuan"**. Konsekuensi yang harus dipenuhi: agar daya tidak naik tanpa batas, **turbin dibatasi
-kapasitasnya** (lihat Kapasitas turbin), bukan η-nya yang dibuat melengkung.
+**Diputuskan:** η tetap **0,75** dan konstan, tetapi **bukan** karena η nyata konstan — η turbin
+nyata berupa kurva terhadap beban. η = 0,75 adalah **satu titik beban saja**. Karena itu ia
+**tidak boleh** disebut "efisiensi turbin"; sebut **"efisiensi sistem pada titik beban acuan"** —
+persis begitu yang tertulis di panel Rumus.
 
-### Kapasitas turbin (Q_kapasitas) — SEPAKAT (Ronde 2, Q1 = C)
-Batas debit yang bisa dilewatkan turbin: **`qKapasitas = 0,40 m³/s`**. Air di atas batas itu
-**melimpas** (spill), tidak menghasilkan daya.
+### Putaran turbin (n) — SEPAKAT: alat bantu gambar, bukan keluaran (Ronde 5)
+`n = n₀·√((Q·H)/(Q₀·H₀))` dengan `n₀ = 900 rpm`, `Q₀ = 0,30 m³/s`, `H₀ = 15 m`. Dibenarkan karena
+pembangkit ini **PLTMH mandiri dengan generator magnet permanen berbeban tetap** (V ∝ n, P ∝ V²),
+**bukan** PLTA grid-connected yang putarannya terkunci sinkron.
+**Diputuskan (Ronde 5 Q3):** putaran **tidak ditampilkan sebagai angka** — LKPD tidak memintanya.
+Nilainya tetap dipakai untuk **menggerakkan roda turbin pada gambar**, di mana ia berguna sebagai
+isyarat visual bahwa aliran berubah. Di panel Rumus rumusnya tetap dicantumkan.
 
-- Daya memakai **debit efektif** `Q_eff = min(Q, 0,40)` → pada H = 25 m daya **mendatar** di
-  **73,58 kW** untuk Q = 0,40 / 0,50 / 0,60.
-- Putaran juga memakai **debit efektif**, jadi rpm ikut mendatar di **1.342 rpm** (bukan 1.643).
-- **Kecepatan aliran di pipa tetap memakai debit sungguhan** (`v = Q/A`), karena pipa pesat
-  mengalirkan seluruh debit termasuk yang nanti melimpas.
-- Yang **boleh** ditampilkan sebagai debit di tabel adalah debit sungguhan yang diatur murid;
-  yang dibatasi hanya konversinya menjadi daya dan putaran.
-- Alasan memilih clamp dan bukan kurva η parabola: satu `Math.min` melunasi janji "P naik tetapi
-  tidak melebihi kapasitas"; grafik Debit–Daya mendapat **siku** yang bisa dibaca murid sebagai
-  bukti adanya batas; kurva η menambah tiga konstanta dan membuat hubungan tidak monoton — beban
-  kognitif tanpa pemahaman tambahan.
+### Tingkat terang lampu — SEPAKAT (Ronde 5, Q4)
+Respon kedua yang diminta LKPD ("tingkat terang nyala LED"). Diwujudkan sebagai **rumah dengan tiga
+jendela** yang menyala bertingkat — bukan tiga lampu indikator di gedung, karena rumah adalah beban
+listrik yang nyata dan menyala terangnya mudah dibaca dari jauh.
 
-### Limpasan (spill) — SEPAKAT harus TERLIHAT (Ronde 3, Q1 = A; mekanisme diperbaiki Ronde 4, Q2 = A)
-Air di atas kapasitas **wajib terlihat membelok keluar**, bukan hanya tertulis di catatan.
-**Diputuskan:** saluran bypass di titik cabang pipa terisi partikel air sebanding porsi limpasan.
-Saluran itu digambar sebagai **pipa terkubur** menurun keluar tepi bawah gambar, bukan pita air di
-permukaan — sebab pipa pesat di gambar memang terbenam di bawah lereng, jadi air yang tampak "jatuh
-di atas rumput" akan salah secara visual.
-**Koreksi Ronde 4, Q2 = A:** mekanisme "partikel jet disembunyikan mengikuti `Q_limpasan/Q_total`"
-dibatalkan. Itu keliru secara fisika: pada head tetap `v_jet = √(2gH)` tidak berubah, jadi debit
-diatur **bukaan nosel** (luas penampang), bukan kecepatan. Yang berlaku sekarang: jet digambar
-sebagai **pita** yang lebarnya `∝ Q_turbin/Q_kapasitas`, **mulut guide vane ikut melebar-menyempit**,
-sembilan butir disebar dalam tiga baris melintang pita, dan **butir tidak pernah disembunyikan** —
-menyembunyikan butir membuat aliran terputus-putus padahal yang benar hanyalah pitanya menipis. Air
-di dalam drum ikut diskalakan dengan bukaan yang sama. Konsekuensi yang benar: **di atas kapasitas
-jet tidak menipis** (nosel sudah terbuka penuh); pembeda 0,40 dan 0,60 m³/s adalah **isi saluran
-limpasan**, bukan jet yang menyusut.
-Alasan tidak cukup angka saja: pada H tetap, Q 0,40 dan Q 0,60 dulu menghasilkan jet, isi drum, dan
-lampu indikator yang **identik**; hanya partikel pipa yang berbeda. Murid akan menyimpulkan semua air
-masuk turbin, padahal dayanya sudah mendatar — gambar menyangkal angka.
-Catatan pemisahan grup: air di dalam drum punya grup SVG sendiri (`#plta-partikel-dalam`), tidak
-dicampur ke `#plta-partikel-jet`, supaya "berapa butir yang terlihat" tidak ambigu.
+**Diputuskan:** tingkat terang adalah **fungsi daya listrik saja**, dengan ambang daya **absolut**
+(bukan persentase):
 
-### Indikator daya — SEPAKAT acuan TETAP (Ronde 4, Q1 = A)
-Jumlah lampu menyala **hanya boleh bergantung pada daya**, karena namanya menjanjikan itu.
-**Diputuskan:** pembaginya tetap = daya maksimum **situs** `η·ρ·g·Q_kapasitas·H_maks` = **73,58 kW**,
-dihitung sekali saat bangun — bukan daya maksimum preset cuaca. Ambang: 44,15 kW (3 lampu),
-22,07 kW (2 lampu), 1,47 kW (1 lampu).
-Alasan: sebelum ini pembaginya `dayaMaksPreset`, yang sejak Ronde 1 hanya berbeda lewat `q_maks`
-(Kemarau 36,79 kW, tiga preset lain 73,58 kW). Akibatnya **keadaan fisis identik tampil berbeda**:
-Q 0,20 m³/s pada H 25 m memberi 36,79 kW / 949 rpm di keempat preset, tetapi lampunya menyala 3 di
-Kemarau dan 2 di tiga preset lain — cuaca mengubah bacaan alat, persis yang dilarang Ronde 1.
-Konsekuensi yang **diterima sadar**: di Kemarau tiga lampu tidak akan pernah menyala (maksimum
-36,79 kW hanya cukup 2 lampu). Itu informasi benar, bukan kerusakan, asalkan keterangannya tertulis.
+| Daya | Level | Label |
+|---|---|---|
+| ≥ 40 kW | 3 | Terang |
+| 12 – 40 kW | 2 | Sedang |
+| 2 – 12 kW | 1 | Redup |
+| < 2 kW | 0 | Mati |
 
+Alasan ambang absolut: lampu di lab nyata punya daya nominal tetap dan tidak "tahu" berapa daya
+maksimum alat yang memberinya makan. Ambang persentase membuat pembacaan alat berubah karena hal
+yang tidak diukur — persis cacat yang sudah dibereskan pada Ronde 4.
 
-### Penanda kapasitas pada slider — SEPAKAT (Ronde 3, Q2 = A)
-Batas 0,40 m³/s dulu hanya ada di panel Rumus (tertutup) dan di catatan yang baru muncul **setelah**
-debit dilewati. **Diputuskan:** satu garis penanda di trek slider debit pada posisi 0,40 m³/s,
-berlabel "kapasitas turbin".
-Penanda **disembunyikan** bila kapasitas berada di luar jangkauan slider (preset Kemarau berhenti di
-0,20 m³/s) — garis yang menempel di ujung trek akan berbohong tentang posisinya.
+Selain tingkat diskret, animasi cahaya memakai **fraksi kontinu** `(P − 1,5)/(45 − 1,5)` yang
+dijepit 0–1 untuk kehalusan. Fraksi hanya untuk gambar; angka yang dibaca siswa tetap tingkat.
 
-### Energi (E) — SEPAKAT (Ronde 1, Q3; Ronde 2, Q4 & Q5)
-Keluaran pengukuran dalam kWh. Tidak ada di proposal; ini tambahan permintaan penulis. Definisi
-yang dipakai `E = P_out × t` dengan `t` = durasi percobaan dalam **detik**; 1 detik simulasi =
-1 detik nyata.
-**Diputuskan (Ronde 2, Q5 = A):** durasi **terkunci setelah baris pertama tercatat**, dan terbuka
-lagi hanya bila seluruh data dihapus. Satu tabel data = satu aktivitas. Energi antarbaris dengan
-durasi berbeda bukan pembanding yang sah — itu variabel pengganggu, bukan temuan.
-**Diputuskan (Ronde 2, Q4 = B):** grafik Debit–Energi dan Head–Energi **dipertahankan**, tetapi
-wajib diberi keterangan bahwa `E = P × t` dengan t sama untuk semua baris, sehingga bentuk kurvanya
-**pasti sama** dengan grafik daya. Kesamaan itu bukan cacat — itu alat uji pemahaman.
+### Kekuatan aliran di dalam pipa (v) — SEPAKAT sebagai penggerak animasi
+`v = Q / A` dengan `A = 0,28 m²` (diameter tetap). Dipakai **hanya** untuk kecepatan partikel air di
+gambar pipa; tidak ditampilkan sebagai angka.
+**Diameter pipa digambar tetap.** Pada pipa berpenampang tetap, debit yang naik berarti kecepatan
+aliran naik, bukan diameter bertambah. Menampilkan pipa yang membesar ketika debit naik adalah
+kesalahan fisika.
 
-### RPM (putaran) — SEPAKAT (Ronde 1, Q2; Ronde 2, Q1)
-Keluaran pengukuran tambahan permintaan penulis. Tidak muncul sama sekali di proposal (proposal
-hanya menyebut "putaran turbin" secara naratif di P0571, tanpa besaran).
-**Diputuskan:** RPM **naik** ketika debit/head naik — `n = n₀·√((Q_eff·H)/(Q₀·H₀))` dengan
-`n₀ = 900 rpm`, `Q₀ = 0,30 m³/s`, `H₀ = 15 m`. Dibenarkan karena pembangkit ini **PLTMH mandiri
-dengan generator magnet permanen berbeban tetap** (V ∝ n, P ∝ V²), **bukan** PLTA grid-connected
-yang putarannya terkunci sinkron. Ambang ini tidak boleh dibawa ke modul PLTA berskala besar.
-**Konsekuensi Ronde 2:** rpm memakai `Q_eff`, jadi ikut mendatar di 1.342 rpm saat Q > 0,40.
+### Energi (E) — DIBATALKAN (Ronde 5, Q3)
+Dulu keluaran pengukuran dalam kWh, `E = P_out × t`. **Dihapus dari antarmuka** karena tidak ada di
+LKPD dan menuntut timer serta durasi, yang juga tidak ada di LKPD. Respon yang diminta LKPD hanya
+daya dan tingkat terang.
+*Catatan: daya dipakai untuk menghitung terang, jadi daya tetap ada; yang hilang adalah
+akumulasinya terhadap waktu.*
 
-### Kondisi waduk — DIBATALKAN sebagai istilah (Ronde 2, Q2 = A)
-Semula: label kualitatif Penuh / Normal / Rendah / Kritis dari rasio H terhadap H_maks preset.
-**Diputuskan: konsep ini dihapus dari simulasi.** Setelah head menjadi sifat situs (Ronde 1 Q2=A),
-waduk tidak lagi punya ketinggian sendiri yang bisa dibandingkan dengan "maksimum skenario".
-Empat ambang (`ambangWaduk` di `konfigurasi.js`) dan fungsi `kondisiWaduk()` di `fisika.js` dibuang.
+### Kapasitas turbin (Q_kapasitas) — DIBATALKAN (Ronde 5, Q3)
+Dulu batas debit 0,40 m³/s dengan limpasan di atasnya, ditambahkan pada Ronde 2 untuk menahan daya
+agar tetap di wilayah PLTMH. **Dihapus** pada Ronde 5: pada rentang slider yang ada
+(Q 0,05–0,60 m³/s, H 4–25 m), `P = ηρgQH` sudah memberi 5,52–66,22 kW — wilayah PLTMH — tanpa perlu
+komponen tambahan yang tidak diajarkan di LKPD.
+Fungsi `debitTurbin()`, `airLimpas()`, `qKapasitas`, ambang dan penanda kapasitas, serta
+**limpasan** yang tergambar, semuanya ikut dihapus.
 
-**Penggantinya:** satu baris kuantitatif apa adanya — **"Head: 15,0 m — 60 % dari maksimum
-situs"** — memakai `h/hMaks` terhadap batas global 25 m. Tidak ada nama kondisi, tidak ada warna
-status. Kata "waduk" tidak lagi dipakai untuk menyatakan apa pun tentang tinggi.
-
-**Koreksi Ronde 3, Q3 = B:** baris itu dulu ditaruh di **panel Hasil Pengukuran**. Itu salah tempat:
-panel tersebut memuat hasil **ukur** percobaan (daya, energi, putaran), sedangkan head adalah besaran
-yang **diatur** murid lewat slider — bukan sesuatu yang diukur simulasi. Baris keempat dihapus dari
-panel, dan persentasenya dipindah ke label slider head (`#ketHead`). Sekarang panel hanya berisi tiga
-keluaran, dan ketiganya benar-benar hasil ukur.
-
-### Yang harus ikut dibereskan — SUDAH (verifikasi Ronde 3)
-Empat kalimat `keterangan` preset yang semula menyebut "muka waduk surut" dan "waduk penuh" sudah
-ditulis ulang agar hanya menyebut **debit** dan **langit**.
+### Head relatif / kondisi waduk — DIBATALKAN (Ronde 2 Q2; Ronde 5 Q3)
+Dulu baris "Head: 15,0 m — 60 % dari maksimum situs" di panel hasil. **Dihapus** bersama panel
+hasil rancangan lama: head adalah besaran yang **diatur** murid, bukan diukur simulasi, dan nilainya
+sudah terbaca di slider serta di garis ukur pada gambar.
 
 ---
 
 ## Kontrol dan tampilan
 
-### Timer / stopwatch eksperimen — SEPAKAT (Ronde 1, Q3; Ronde 2, Q5)
-Permintaan penulis: agar semua kelompok punya durasi percobaan yang sama, karena energi (kWh) ikut
-diamati. Tidak ada di proposal.
-**Diputuskan:** jam percobaan berjalan **1:1 dengan waktu nyata** dan **hanya** jam inilah yang
-dipakai menghitung energi (fase pemulihan putaran 2 detik tidak dihitung). Durasi dipilih murid
-dari 30/60/90/120 s, lalu **terkunci setelah baris pertama tercatat** dan terbuka lagi hanya bila
-seluruh data dihapus.
+### Dua percobaan (P1/P2) — SEPAKAT (Ronde 5, Q5)
+LKPD meminta siswa memilih satu percobaan dan menjaga variabel kontrol tetap. **Diputuskan:** dua
+tombol mode menetapkan variabel mana yang diubah, dan **mengunci slider variabel kontrolnya**
+(`disabled`), disertai keterangan tertulis mengapa terkunci.
 
-### Data tercatat (hasil "Catat data") — SEPAKAT (Ronde 1, Q5)
-Satu baris data = satu kondisi percobaan yang disimpan murid (Q, H, P_out, E, RPM, preset), bukan
-pembacaan sesaat. Perlu dibedakan tegas dari **pembacaan langsung** (angka yang berubah di layar).
-Istilah "pembacaan langsung" dan "data tercatat" tidak boleh dipertukarkan.
-**Diputuskan (Ronde 1, Q5 = A):** selama fase pemulihan putaran (2 detik pertama) daya dan energi
-ditampilkan **"—"**, bukan angka penuh. Alasannya: daya yang masih nol tidak boleh tampak seolah
-sudah tercapai, dan murid harus bisa membedakan "belum mengukur" dari "hasilnya nol". RPM tetap
-tampil karena justru itulah besaran yang sedang menanjak.
+| Mode | Diubah | Dikunci |
+|---|---|---|
+| P1 · Ubah ketinggian | H 4–25 m | Q = 0,30 m³/s |
+| P2 · Ubah debit air | Q 0,05–0,60 m³/s | H = 15,0 m |
 
-### Grafik / panel data — SEPAKAT (Ronde 1, Q5; Ronde 2, Q4)
-Permintaan penulis: grafik dipindah ke bagian "info" dan bagian itu diganti namanya. Hubungan yang
-diminta: Debit–Daya, Head–Daya, Debit–Energi, Head–Energi, RPM–waktu.
-**Diputuskan:** grafik data adalah **sebaran titik hasil percobaan** (bertambah setiap kali murid
-mencatat data), bukan deret waktu — kecuali **strip-chart RPM**, yang memang deret waktu selama
-satu percobaan karena putaran adalah satu-satunya besaran yang berubah di dalam percobaan.
-**Diputuskan (Ronde 2, Q4 = B):** keempat grafik sebar dipertahankan. Debit–Energi dan Head–Energi
-identik bentuknya dengan Debit–Daya dan Head–Daya; keterangannya wajib menyebut `E = P × durasi`
-dengan durasi yang sama untuk semua baris, sehingga bentuk serupa itu **memang seharusnya**.
-**Garis model pada grafik sebar** (keputusan Ronde 1 Q3 = A): garis putus-putus hanya digambar bila
-**semua titik memakai tinggi jatuh air (atau debit) yang sama** — kondisi acuannya diambil dari
-kelompok data, bukan dari baris terakhir. Bila data mencampur kondisi, garis **disembunyikan** dan
-keterangan menyebutkan sebabnya. Ini melatih arti kontrol variabel, bukan menutupinya.
+Alasan tidak diserahkan pada disiplin siswa: kalau penguncian tidak dilakukan alat, tiap
+kesimpulan yang ditarik siswa berisiko tidak sah karena prosedurnya tidak terjaga — bukan karena
+fisikanya salah. Penguncian membuat syarat LKPD **tidak mungkin dilanggar**.
 
-### Preset — SEPAKAT: skenario lingkungan, bukan tema (Ronde 1, Q6 → Q2)
-Permintaan penulis: banyak pilihan preset, dan tampilan visual mengikuti (mendung → tampilan
-mendung, hujan → tampilan hujan, dsb.).
-**Diputuskan (Ronde 1 Q2 = A):** preset **hanya mengubah ketersediaan debit (q_maks) dan tampilan
-visual** (langit, awan, hujan, gelombang). Preset **tidak lagi** membatasi head; slider head 4–25 m
-terbuka penuh di semua preset. Preset tetap mengunci diri selama satu percobaan.
-*Konsekuensi setelah kapasitas turbin dipasang (Ronde 2 Q1 = C):* daya maksimum per preset menjadi
-`0,75·ρ·g·min(q_maks, 0,40)·25` — **Kemarau 36,79 kW** (q_maks 0,20), **Cerah 73,58 kW** (q_maks
-0,40, tepat di kapasitas), **Mendung 73,58 kW** dan **Hujan 73,58 kW** (keduanya sudah melewati
-kapasitas, sisa debit melimpas).
-*Catat efek samping yang diterima:* Mendung (0,50) dan Hujan (0,60) menjadi **identik** dalam daya
-dan putaran, berbeda hanya pada debit yang boleh disetel murid dan tampilan cuaca. Itu bukan bug —
-itu pelajaran bahwa air di atas kapasitas turbin tidak menambah daya.
-*Jangan campur dua makna:* "preset" = skenario lingkungan + tema tampilan yang selalu bergerak
-bersama. Tidak ada preset kosmetik-murni.
+### "Aliran stabil" — SEPAKAT (Ronde 5)
+LKPD meminta pengamatan dilakukan "setelah aliran stabil". **Diputuskan:** angka dan gambar diredam
+menuju nilai pengatur selama ±0,35 detik; selama itu status berbunyi **"Aliran menyesuaikan…"** dan
+angka respon ditampilkan **"—"**. Setelah redaman selesai status menjadi **"Aliran stabil — catat
+daya dan tingkat terangnya di LKPD."** dan angka yang tampil adalah **nilai model yang eksak**,
+bukan sisa redaman.
+"Stabil" di sini bermakna *nilai sudah mencapai keadaan mantapnya*, bukan *alat baru dihidupkan*.
+Alasan angka dipaku pada nilai eksak saat dinyatakan stabil: kalau sisa redaman masih terbaca
+(mis. 8,89 kW padahal model 8,83 kW), angka yang ditulis siswa ke LKPD berbeda dari hasil hitung
+rumusnya sendiri — dan itu membuat siswa mencari kesalahan pada rumus yang benar.
 
-### Jenis turbin yang digambar — SEPAKAT: crossflow (Banki) (Ronde 1 Q4, Ronde 2 Q3)
-Label dan gambar memakai **turbin crossflow (Banki)**: impuls, memakai nosel + jet, dan beroperasi
-di rentang head 5–100 m sehingga **cocok** dengan H 4–25 m. Bukan Pelton (head terlalu rendah),
-bukan Francis/Kaplan (reaksi, tanpa jet).
-**Diputuskan (Ronde 2 Q3 = B):** gambar **ikut diubah**, bukan hanya label — drum dengan banyak
-sudu melintang selebar drum + *guide vane* di mulut nosel, jet dipertahankan. Alasan: mengganti
-label saja membuat teks dan gambar saling menyangkal, dan itu cacat yang sama dengan temuan no. 3.
-Keputusan ini juga konsekuensi dari Q1 Ronde 1 = "realistis visual", bukan tambahan hiasan.
+### Timer / durasi / tombol Mulai-Jeda-Reset / "Catat Data" — DIBATALKAN (Ronde 5, Q3)
+Semua dihapus: tidak ada di LKPD, dan simulasi kini **selalu hidup**. Begitu pengatur digeser, air
+mengalir dan angka berubah. Tidak ada keadaan yang harus dimulai, dijeda, atau direset, sehingga
+istilah "Reset" yang dulu sempat KABUR **lenyap dengan sendirinya** — bukan diselesaikan.
 
-### Start / Pause / Reset — SEPAKAT (Ronde 3, Q4 = A)
-Permintaan penulis: tombol jelas di bawah visualisasi.
-**Diputuskan (Ronde 3, Q4 = A):** dua tombol dipertahankan dan **tidak digabung** —
-"Ulangi Percobaan" (kembalikan percobaan ke nol, data tetap) dan "Hapus Semua Data" (buang seluruh
-baris tabel, dengan konfirmasi). Alasannya: keduanya melakukan hal yang berbeda pada barang yang
-berbeda — satu pada percobaan yang sedang berjalan, satu pada arsip. Menggabungkannya ke satu tombol
-dengan dialog pilihan justru membuat murid harus membaca dialog setiap kali hanya ingin mengulang,
-dan satu salah klik menghapus pekerjaan satu kelompok.
-Bedanya kini dinyatakan **tertulis di halaman** (`#ketTombol` di bawah bilah kendali), bukan hanya
-ditemukan lewat dialog konfirmasi, karena kesalahan paling mahal di sini adalah menekan tombol yang
-salah lalu menyetujui dialog tanpa membacanya.
-Perilaku yang berjalan: "Mulai" mengunci pengatur dan memulai fase pemulihan 2 detik; "Jeda"
-menghentikan jam simulasi sehingga tidak menambah energi; "Lanjut" meneruskan dari titik jeda.
-*Sisa yang sengaja dibiarkan:* kata "Reset" tidak dipakai di antarmuka sama sekali — tiga tombol
-disebut dengan namanya masing-masing — sehingga tidak ada istilah ambigu yang perlu ditafsirkan.
+### Tabel data / grafik / panel "Data & Analisis" / CSV / Kartu Data — DIBATALKAN (Ronde 5, Q3)
+Dihapus karena tidak ada di LKPD, dan pada layar HP panelnya mendorong gambar keluar dari layar
+(keluhan langsung penulis). Grafik yang diminta LKPD adalah grafik buatan siswa sendiri di lembar
+kerja. Data siswa tinggal di LKPD, bukan di alat.
+*Ikut hilang:* `localStorage`, jejak RPM, garis model, legenda, tombol Salin Tabel dan Unduh CSV.
+
+### Preset cuaca — DIBATALKAN (Ronde 5, Q3)
+Dulu Kemarau/Cerah/Mendung/Hujan yang mengubah batas debit dan tampilan langit. **Dihapus:** tidak
+ada di LKPD, dan ia menambah satu variabel yang harus dijelaskan tanpa melayani satu pun butir LKPD.
+Akibatnya jawaban lama "cuaca hanya mengubah debit" (Ronde 1 Q2) tidak lagi dipakai — pertanyaannya
+sudah tidak ada.
+
+### Panel rumus — SEPAKAT dipertahankan (Ronde 5, Q3)
+**Satu-satunya** yang dipertahankan meski tidak ada di LKPD; keputusan penulis.
+Isinya `P_air = ρgQH`, `P_listrik = ηρgQH`, `n = n₀√((Q·H)/(Q₀·H₀))`, `P_MW = P_kW ÷ 1000`, plus
+nilai ρ, g, η, n₀.
+**Tertutup secara bawaan**, dibuka lewat tombol "Lihat rumus". Alasannya: kalau rumus terpampang
+sejak awal, tahap merumuskan hipotesis kehilangan makna — siswa menebak dulu, baru membuka rumus
+untuk memeriksa.
+
+### Jenis turbin yang digambar — SEPAKAT: reaksi (Ronde 5, Q2)
+**Diputuskan:** turbin **reaksi** — kasing tertutup berbentuk rumah keong, air masuk dari pipa pesat,
+keluar lewat pipa hisap. **Tanpa nosel, tanpa jet bebas.** Label cukup **"Turbin"**, tanpa nama
+jenis, persis seperti gambar acuan.
+Menggantikan keputusan Ronde 1 Q4 / Ronde 2 Q3 (crossflow + nosel + jet) yang **dibatalkan**:
+gambar acuan penulis menunjukkan turbin reaksi, dan rentang head 4–25 m memang wilayah turbin
+reaksi. Mewajibkan crossflow akan membuat gambar menyangkal acuan.
+
+### Alur air dan alur listrik pada gambar — SEPAKAT (Ronde 5, Q2)
+Dua jalur terpisah yang keduanya harus terlihat:
+
+```
+air   : Waduk → Bendungan → Intake → Pipa pesat → Turbin → Pipa hisap → Sungai bawah tanah
+listrik: Generator → Transformator → Jalur transmisi (tiang) → Rumah
+```
+
+**Diputuskan:** air keluar **tidak** langsung menjadi sungai di permukaan, melainkan turun ke
+**sungai bawah tanah** (digambar sebagai rongga), dan di atas rongga itu berdiri **rumah** yang
+disuplai lewat jalur transmisi. Urutan listrik **transformator → kabel → tiang → rumah** harus benar,
+karena rumah adalah beban yang menyala sebagai respon visual.
+
+### Bahasa dan jumlah teks — SEPAKAT (Ronde 5, Q5)
+"Pastikan tidak terlalu banyak deskripsi." Teks yang tersisa hanya: catatan variabel kontrol per
+mode, status aliran, catatan konversi MW, keterangan penguncian, dan isi panel rumus (tertutup).
+Label gambar memakai satu-dua kata.
 
 ---
 
@@ -316,4 +312,4 @@ terikat** penelitian, diukur dengan pre-test dan post-test — bukan oleh simula
 Catat: karena simulasi tidak mengukur apa pun, setiap fitur simulasi harus bisa dilacak ke salah
 satu dari tiga hal: (a) tahapan inquiry yang dilayani, (b) indikator Facione yang dilatih, atau
 (c) aspek yang dinilai pada instrumen validasi. Fitur yang tidak bisa dilacak ke ketiganya adalah
-hiasan.
+hiasan. **Sejak Ronde 5, ini diperketat menjadi: fitur yang tidak ada di LKPD juga tidak dipasang.**

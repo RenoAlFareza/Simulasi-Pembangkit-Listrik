@@ -1,6 +1,27 @@
-# Spesifikasi Perbaikan UI/UX — Modul PLTA
+# Spesifikasi Perbaikan UI/UX — Modul PLTA (rancangan lama, 0.2.x)
 
-Status: **usulan, menunggu persetujuan**. Dokumen ini adalah kontrak pengerjaan perbaikan
+> ## ⚠️ Dokumen ini menyangkut rancangan yang SUDAH DIGANTI
+>
+> Seluruh isi dokumen ini — R-GRAFIK-01, R-DATA-01/02, R-PRESET-01, R-JEDA-01, D-01/D-02/D-03,
+> dan semua kebutuhan turunannya — mengacu pada **rancangan 0.2.x**: yang punya preset cuaca,
+> timer, energi kWh, tabel data, empat grafik sebar, tombol Catat Data, kapasitas turbin, dan
+> limpasan.
+>
+> Pada **Ronde 5** penulis memutuskan **redesign total** dengan LKPD praktikum sebagai kontrak
+> tunggal. Seluruh komponen di atas dihapus, sehingga sebagian besar kebutuhan di dokumen ini
+> menjadi **tidak berlaku** — bukan karena sudah dikerjakan, tetapi karena barangnya sudah tidak ada.
+>
+> **Kontrak yang berlaku sekarang:**
+> [spesifikasi-simulasi.md](spesifikasi-simulasi.md) (rancangan 0.3.0).
+>
+> Dokumen ini **dipertahankan** karena dua alasan: (a) ia mencatat perbaikan yang tetap berlaku
+> pada lapisan yang tidak berubah (token warna, target sentuh, aksesibilitas, `prefers-reduced-motion`,
+> tipografi, irama jarak) dan (b) ia merekam metode audit runtime yang dipakai untuk menemukan
+> cacat nyata — metode itulah yang kemudian menemukan lampu indikator dan tebal jet yang salah.
+>
+> Setiap bagian yang tidak lagi berlaku ditandai **[TIDAK BERLAKU — 0.3.0]** pada judulnya.
+
+Status asli: **usulan, menunggu persetujuan**. Dokumen ini adalah kontrak pengerjaan perbaikan
 yang diturunkan dari audit runtime, bukan daftar keinginan.
 
 Kaitan: [spesifikasi-simulasi.md](spesifikasi-simulasi.md) (kontrak fitur) ·
@@ -30,6 +51,39 @@ Tingkat prioritas:
 Setiap kebutuhan wajib memenuhi tiga hal agar bisa dinyatakan selesai: **perilaku** yang berubah,
 **kriteria penerimaan** yang bisa diukur, dan **bukti** berupa hasil pengukuran ulang setelah
 perbaikan.
+
+### 1.1 Status tiap kebutuhan di rancangan 0.3.0
+
+Tabel ini menjawab satu pertanyaan saja: *apakah kebutuhan ini masih punya barang yang bisa
+diperbaiki?* "Tidak berlaku" berarti objeknya sudah dihapus pada Ronde 5 — bukan berarti cacatnya
+kambuh.
+
+| ID | Status di 0.3.0 | Sebab |
+|---|---|---|
+| R-GRAFIK-01 | **Tidak berlaku** | Grafik RPM dihapus bersama panel Data & Analisis |
+| R-DATA-01 | **Tidak berlaku** | Tombol "Hapus Semua Data" dan tabel dihapus |
+| R-ISTILAH-01 | **Berlaku, diperketat** | Satu besaran satu nama tetap wajib; kini mengikuti bahasa LKPD ("Ketinggian sumber air — H") |
+| R-MODEL-01 | **Tidak berlaku** | Garis model dihapus bersama grafik sebar |
+| R-DATA-02 | **Digantikan** | Tidak ada pencatatan; padanannya "aliran stabil" + angka dipaku pada nilai model eksak |
+| R-PRESET-01 | **Tidak berlaku** | Preset cuaca dihapus |
+| R-JEDA-01 | **Tidak berlaku** | Tombol Jeda dihapus; simulasi selalu hidup |
+| R-A11Y-01 | **Tidak berlaku** | Dialog Kartu Data dihapus |
+| R-A11Y-02 | **Digantikan** | Kanvas dan tabel dihapus; padanannya nama aksesibel untuk SVG dan panel hasil |
+| R-KONTRAS-01 | **Berlaku** | Token warna tetap dipakai; seluruh pasangan wajib ≥ 4,5:1 |
+| R-KONTRAS-02 | **Berlaku, jadi inti** | Penguncian slider variabel kontrol adalah mekanisme utama 0.3.0, jadi kontrol terkunci wajib tetap terbaca |
+| R-A11Y-03 | **Berlaku** | Status mode percobaan tetap harus tersedia secara terprogram |
+| R-A11Y-04 | **Berlaku** | `prefers-reduced-motion` tetap wajib |
+| R-A11Y-05 | **Berlaku** | Label diagram SVG tetap wajib terbaca di atas latar bergambar |
+| R-LAYOUT-01 | **Tidak berlaku** | Tabel dan grafik dihapus |
+| R-LAYOUT-02 | **Berlaku** | Tata letak dua kolom desktop tetap dipakai |
+| R-LAYOUT-03 | **Berlaku, jadi pekerjaan utama** | Komposisi diagram dibangun ulang total pada Ronde 5 |
+| R-VISUAL-01 | **Berlaku** | Skala tipografi tetap dikunci |
+| R-VISUAL-02 | **Berlaku** | Irama jarak 4/8 dan satuan warna lewat token tetap dipakai |
+| D-01 · D-02 · D-03 | **Tidak berlaku** | Status waduk, CSV, dan legenda RPM semuanya dihapus |
+
+Perbaikan yang **tetap berlaku** itulah yang diwarisi: token warna, target sentuh ≥ 44 px, kontras
+AA, `prefers-reduced-motion`, penguncian kontrol yang tetap terbaca, dan komposisi diagram yang
+rapi. Selebihnya adalah barang yang sudah tidak ada.
 
 ---
 
@@ -562,6 +616,19 @@ aksesibilitas, bukti berupa nilai terukur (rasio kontras, `getBoundingClientRect
 `document.activeElement`, `getBBox`, jumlah pilihan di pohon aksesibilitas) ditambah tangkapan
 layar pada lebar 360 px, 768 px, 1024 px, dan 1366 px.
 
+**4–9. Lapis rancangan 0.2.x — [TIDAK BERLAKU di 0.3.0].** Nomor 4 sampai 9 di bawah ini menguji
+barang yang sudah dihapus: penguji keputusan (27/0), penguji limpasan (8/0), penguji garis model,
+penguji tebal jet (8/0), penguji lampu indikator (2/0), dan pemeriksaan visual kondisi ekstrem.
+Ketujuh berkasnya **dipindahkan** ke `_analysis/usang/` beserta `_analysis/usang/BACA.md` yang
+menerangkan tiap berkas — kegagalannya bukan regresi, melainkan elemen DOM yang sudah tidak ada.
+Uraiannya tetap disimpan di bawah karena **metode**-nya masih berlaku: membandingkan angka dan
+gambar pada kondisi ekstrem, bukan pada kondisi yang representatif.
+
+> **Lapis 0.3.0 sekarang hanya dua:** penguji model (**43 lulus / 0 gagal**) dan penguji redesign
+> (**42 lulus / 0 gagal**). Penguji redesign memeriksa dua respon saja, empat teks terlarang,
+> penguncian slider variabel kontrol, kemonotonan daya terhadap H dan Q, tingkat terang, konversi
+> kW→MW, kelengkapan unsur gambar, ketiadaan luber di 375 px, dan ketiadaan galat JS.
+
 **4. Penguji perilaku keputusan** (`_analysis/uji-keputusan.js`) — memastikan setiap keputusan
 hasil grill benar-benar berjalan di halaman, bukan hanya tertulis di dokumen. Kini **27 lulus /
 0 gagal**, mencakup "—" selama pemulihan, kartu preset tanpa "H maks", penanda kapasitas yang
@@ -609,34 +676,41 @@ kontras teks aktif, ketiadaan luber horizontal, atau jumlah model yang lulus.
 
 ## 8. Matriks keterlacakan
 
-| Requirement | Prioritas | ID audit asal | Berkas utama |
-|---|---|---|---|
-| R-GRAFIK-01 | P1 | Grafik RPM: sampling dan fase pemulihan | `inti.js` |
-| R-DATA-01 | P1 | Hapus Semua Data tidak membersihkan tampilan | `inti.js` |
-| R-ISTILAH-01 | P1 | Satu besaran tiga nama | `index.html`, `konfigurasi.js`, `inti.js` |
-| R-MODEL-01 | P1 | Garis model tampil sebelum ada data | `konfigurasi.js`, `inti.js` |
-| R-DATA-02 | P1 | Catat Data dapat ditekan di tengah percobaan | `inti.js` |
-| R-PRESET-01 | P1 | Grafik basi dan titik terpotong setelah ganti preset | `inti.js` |
-| R-JEDA-01 | P1 | Jeda memotong fase pemulihan dan tidak menghentikan animasi | `inti.js` |
-| R-A11Y-01 | P1 | Dialog tanpa pemindahan dan jebakan fokus | `index.html`, `inti.js` |
-| R-A11Y-02 | P1 | Kanvas dan tabel tanpa nama aksesibel | `index.html`, `inti.js`, `gaya.css` |
-| R-KONTRAS-01 | P2 | Token hijau/jingga gagal kontras saat aktif | `gaya.css`, `konfigurasi.js`, `inti.js` |
-| R-KONTRAS-02 | P2 | Kontrol terkunci nyaris tak terbaca | `gaya.css` |
-| R-A11Y-03 | P2 | Status pilihan hanya lewat warna | `index.html`, `inti.js`, `gaya.css` |
-| R-A11Y-04 | P2 | `prefers-reduced-motion` tidak dihormati | `inti.js` |
-| R-A11Y-05 | P2 | Kontras kanvas dan label diagram | `inti.js`, `modul-plta.js`, `index.html`, `gaya.css` |
-| R-LAYOUT-01 | P2 | Tabel dan grafik di bawah lipatan | `gaya.css`, `index.html` |
-| R-LAYOUT-02 | P2 | Kolom samping terpotong saat menempel | `gaya.css` |
-| R-LAYOUT-03 | P2 | Komposisi diagram dan elemen terpotong | `modul-plta.js` |
-| R-VISUAL-01 | P2 | Skala tipografi 17 langkah | `gaya.css` |
-| R-VISUAL-02 | P2 | Irama jarak dan warna di luar token | `gaya.css`, `konfigurasi.js`, `inti.js`, `modul-plta.js` |
-| D-01 | Keputusan | Status Kondisi waduk — **selesai**, kosakata waduk dihapus | — |
-| D-02 | Keputusan | Bentuk CSV dokumentasi — **selesai**, metadata lengkap | — |
-| D-03 | Keputusan | Legenda jejak RPM — **selesai**, legenda HTML | `inti.js`, `gaya.css` |
+Kolom **Status 0.3.0** memakai singkatan: **B** = masih berlaku, **T** = tidak berlaku (barangnya
+dihapus pada Ronde 5), **G** = digantikan padanan baru.
+
+| Requirement | Prioritas | Status 0.3.0 | ID audit asal | Berkas utama |
+|---|---|---|---|---|
+| R-GRAFIK-01 | P1 | T | Grafik RPM: sampling dan fase pemulihan | `inti.js` |
+| R-DATA-01 | P1 | T | Hapus Semua Data tidak membersihkan tampilan | `inti.js` |
+| R-ISTILAH-01 | P1 | B | Satu besaran tiga nama | `index.html`, `konfigurasi.js`, `inti.js` |
+| R-MODEL-01 | P1 | T | Garis model tampil sebelum ada data | `konfigurasi.js`, `inti.js` |
+| R-DATA-02 | P1 | G | Catat Data dapat ditekan di tengah percobaan | `inti.js` |
+| R-PRESET-01 | P1 | T | Grafik basi dan titik terpotong setelah ganti preset | `inti.js` |
+| R-JEDA-01 | P1 | T | Jeda memotong fase pemulihan dan tidak menghentikan animasi | `inti.js` |
+| R-A11Y-01 | P1 | T | Dialog tanpa pemindahan dan jebakan fokus | `index.html`, `inti.js` |
+| R-A11Y-02 | P1 | G | Kanvas dan tabel tanpa nama aksesibel | `index.html`, `inti.js`, `gaya.css` |
+| R-KONTRAS-01 | P2 | B | Token hijau/jingga gagal kontras saat aktif | `gaya.css`, `konfigurasi.js`, `inti.js` |
+| R-KONTRAS-02 | P2 | B | Kontrol terkunci nyaris tak terbaca | `gaya.css` |
+| R-A11Y-03 | P2 | B | Status pilihan hanya lewat warna | `index.html`, `inti.js`, `gaya.css` |
+| R-A11Y-04 | P2 | B | `prefers-reduced-motion` tidak dihormati | `inti.js` |
+| R-A11Y-05 | P2 | B | Kontras kanvas dan label diagram | `inti.js`, `modul-plta.js`, `index.html`, `gaya.css` |
+| R-LAYOUT-01 | P2 | T | Tabel dan grafik di bawah lipatan | `gaya.css`, `index.html` |
+| R-LAYOUT-02 | P2 | B | Kolom samping terpotong saat menempel | `gaya.css` |
+| R-LAYOUT-03 | P2 | B | Komposisi diagram dan elemen terpotong | `modul-plta.js` |
+| R-VISUAL-01 | P2 | B | Skala tipografi 17 langkah | `gaya.css` |
+| R-VISUAL-02 | P2 | B | Irama jarak dan warna di luar token | `gaya.css`, `konfigurasi.js`, `inti.js`, `modul-plta.js` |
+| D-01 | Keputusan | T | Status Kondisi waduk — dihapus bersama panel hasil lama | — |
+| D-02 | Keputusan | T | Bentuk CSV dokumentasi — CSV dihapus | — |
+| D-03 | Keputusan | T | Legenda jejak RPM — grafik RPM dihapus | `inti.js`, `gaya.css` |
 
 ---
 
-## 9. Urutan pengerjaan yang disarankan
+## 9. Urutan pengerjaan yang disarankan — [RIWAYAT, sudah dijalankan]
+
+Lima tahap di bawah ini **selesai dikerjakan** pada rancangan 0.2.x, lalu seluruh bangunan yang
+mereka rapikan diganti pada Ronde 5. Bagian ini disimpan sebagai riwayat: ia menunjukkan bahwa
+sebelum mengganti sesuatu, cacatnya lebih dulu dibuktikan ada.
 
 Perbaikan disusun agar setiap tahap dapat diverifikasi sendiri dan tidak menumpuk risiko.
 
