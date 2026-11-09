@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="id"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#f7f4ec"><meta name="description" content="Jelajahi bagaimana air, angin, dan matahari menjadi listrik melalui laboratorium energi terbarukan interaktif."><title>Energi — Laboratorium Energi Terbarukan</title><link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='12' fill='%232d443b'/%3E%3Cpath d='M23 6 12 23h8l-3 11 12-18h-8z' fill='%23fff7da'/%3E%3C/svg%3E"><link rel="stylesheet" href="styles.css"></head>
+<body>
+<svg class="icon-defs" xmlns="http://www.w3.org/2000/svg"><defs>
+<symbol id="bolt" viewBox="0 0 24 24"><path d="m13.5 2-9 12h7l-1 8 9-13h-7z"></path></symbol>
+<symbol id="arrow" viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6"></path></symbol>
+<symbol id="water" viewBox="0 0 24 24"><path d="M12 2s-6 7-6 11a6 6 0 0 0 12 0c0-4-6-11-6-11Z"></path><path d="M9 14a3 3 0 0 0 3 3"></path></symbol>
+<symbol id="wind" viewBox="0 0 24 24"><path d="M3 8h12a3 3 0 1 0-3-3M3 12h16a2 2 0 1 1-2 2M3 16h7a3 3 0 1 1-3 3"></path></symbol>
+<symbol id="sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"></path></symbol>
+<symbol id="book" viewBox="0 0 24 24"><path d="M12 5v15M3 4c4-1 7 0 9 2 2-2 5-3 9-2v15c-4-1-7 0-9 2-2-2-5-3-9-2Z"></path></symbol>
+</defs></svg>
+<div class="scene" aria-hidden="true"><img src="./assets/energy-landscape.webp" alt="" fetchpriority="high"></div>
+<header class="header"><a class="brand" href="index.html" aria-label="Energi, halaman utama"><span class="brand-mark"><svg><use href="#bolt"></use></svg></span><span>energi<span class="brand-dot">.</span><small>LABORATORIUM VIRTUAL</small></span></a><button class="guide" id="guide-open"><svg><use href="#book"></use></svg><span>Panduan singkat</span></button></header>
+<main><div class="intro"><h1>Laboratorium Virtual<br>Energi Terbarukan</h1><p>Pilih simulasi pembangkit listrik tenaga air, angin, atau surya.<br class="desktop-br"> Pelajari cara kerjanya melalui percobaan interaktif.</p></div>
+<nav class="choices" aria-label="Pilih simulasi pembangkit listrik">
+<a class="choice hydro" href="plta/index.html"><span class="choice-icon"><svg><use href="#water"></use></svg></span><span class="choice-copy"><span class="choice-title">Tenaga Air <span class="abbr">PLTA</span></span><span class="choice-desc">Ikuti aliran air, bangkitkan listrik.</span></span><span class="choice-action"><svg><use href="#arrow"></use></svg></span></a>
+<a class="choice wind" href="pltb/index.html"><span class="choice-icon"><svg><use href="#wind"></use></svg></span><span class="choice-copy"><span class="choice-title">Tenaga Angin <span class="abbr">PLTB</span></span><span class="choice-desc">Jelajahi kekuatan di setiap hembusan.</span></span><span class="choice-action"><svg><use href="#arrow"></use></svg></span></a>
+<a class="choice solar" href="plts/index.html"><span class="choice-icon"><svg><use href="#sun"></use></svg></span><span class="choice-copy"><span class="choice-title">Tenaga Surya <span class="abbr">PLTS</span></span><span class="choice-desc">Temukan energi dalam sinar matahari.</span></span><span class="choice-action"><svg><use href="#arrow"></use></svg></span></a>
+</nav></main>
+<footer><span>Alam memberi energi. Kita belajar memahaminya.</span><span class="footer-right">Air <i></i> Angin <i></i> Matahari</span></footer>
+<dialog id="info-dialog" aria-labelledby="dialog-title"><button class="dialog-close" aria-label="Tutup dialog">×</button><span class="dialog-kicker" id="dialog-kicker">PANDUAN SINGKAT</span><h2 id="dialog-title">Belajar lewat percobaan.</h2><div id="dialog-content"><ol><li><strong>Pilih sumber energi.</strong> Tenaga Air, Tenaga Angin, atau Tenaga Surya — ketiganya sudah bisa dijalankan.</li><li><strong>Atur dan amati.</strong> Ubah kondisi, jalankan percobaan, dan lihat pengaruhnya terhadap listrik yang dihasilkan.</li><li><strong>Temukan pola.</strong> Bandingkan hasil, lalu catat penjelasanmu di LKPD.</li></ol><p>Setiap simulasi punya LKPD digital sendiri. Isian tersimpan di perangkatmu dan bisa diunduh sebagai PDF.</p></div><button class="dialog-done">Mengerti <svg><use href="#arrow"></use></svg></button></dialog>
+<script src="app.js"></script></body></html>

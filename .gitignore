@@ -1,0 +1,48 @@
+# ---------------------------------------------------------------------------
+# Bahan mentah, dokumen perencanaan, dan arsip kerja — TIDAK dipublikasikan.
+#
+# `_arsip/` menyimpan:
+#   - HTML asli hasil "Save page as" (PLTA, PLTB, PLTS) beserta folder _files
+#   - PLTA_Revisi/ versi sebelumnya
+#   - CONTEXT.md dan docs/ (spesifikasi + catatan perencanaan)
+#   - gambar kerja dan pratinjau langit
+#
+# `_analysis/` menyimpan dokumen proposal skripsi (memuat nama lengkap & NIM
+# penulis), 6 gambar hasil ekstraksi, dan 107 tangkapan layar bukti audit.
+#
+# Keduanya tetap ada di komputer ini; hanya tidak ikut ke repositori publik.
+# ---------------------------------------------------------------------------
+_arsip/
+_analysis/
+
+# ---------------------------------------------------------------------------
+# Sistem operasi & editor
+# ---------------------------------------------------------------------------
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+.DS_Store
+*.swp
+*~
+.vscode/
+.idea/
+
+# ---------------------------------------------------------------------------
+# Node.js (dipakai hanya oleh skrip penguji, bukan oleh aplikasi)
+# ---------------------------------------------------------------------------
+node_modules/
+npm-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+package-lock.json.bak
+
+# ---------------------------------------------------------------------------
+# Berkas sementara pengujian & profil Chrome headless
+# ---------------------------------------------------------------------------
+*.tmp
+*.log
+tmp/
+temp/
+.chrome-*/
+_shots/
