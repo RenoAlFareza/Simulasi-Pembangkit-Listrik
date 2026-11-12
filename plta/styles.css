@@ -69,3 +69,5 @@ html,body{background:var(--cream);min-height:100%;}body{min-height:100svh;paddin
 .stage-overview{margin:12px 0 16px;padding-left:20px}
 .stage-overview li{font-size:12px;line-height:1.8;color:#6e806b;margin-bottom:9px}
 .stage-overview li strong{color:var(--ink);display:block}
+
+.record-target{display:block;width:100%;margin:18px 0 10px;padding:10px 12px;border:1px solid #cfdec8;border-radius:8px;background:#f7fbf4;font-size:13px;color:var(--ink)}

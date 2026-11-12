@@ -84,9 +84,10 @@ P beban     = P generator × η penyaluran
 | Cut-in / cut-out | 3 m/s / 25 m/s |
 | Efisiensi penyaluran | 97 % × 98 % × 98 % ≈ 93,2 % |
 
-Jumlah bilah **tidak** mengubah luas sapuan rotor — inilah inti Percobaan 2.
-Karena itu daya pada 6 m/s hanya bergerak antara 0,066–0,069 MW meski jumlah
-bilah berbeda.
+Jumlah bilah **tidak** mengubah luas sapuan rotor — inilah sebabnya daya pada
+6 m/s hanya bergerak antara 0,066–0,069 MW meski jumlah bilah berbeda. Karena
+itu perubahan jumlah bilah lebih terasa lewat Cp dan TSR optimal, bukan lewat
+daya tersedia di angin.
 
 ### PLTS — Tenaga Surya
 
@@ -107,7 +108,8 @@ P beban = P AC × η penyaluran
 | Efisiensi penyaluran | 98 % × 98 % = 96,04 % |
 
 Cahaya langsung tegak lurus panel saat sudut panel 30° (karena 90° − 60° = 30°).
-Sudut 0° dan 75° memberi POA lebih rendah — inilah inti Percobaan 2.
+Sudut 0° dan 75° memberi POA lebih rendah, sehingga daya ikut turun pada
+intensitas yang sama.
 
 **Waktu berjalan selama percobaan.** Satu percobaan bukan cuplikan diam:
 matahari menyusuri busurnya, sehingga daya ikut naik atau turun.
@@ -149,7 +151,7 @@ semuanya dianimasikan.
   senja → malam — dengan matahari menyusuri busur lebar dari kiri bawah,
   memuncak di tengah, lalu turun ke kanan.
 - **Nama fase diturunkan dari intensitas sumber**, bukan dari jam dinding.
-  Intensitas adalah variabel kontrol LKPD: menaikkan slider ke 1.000 W/m²
+  Intensitas adalah variabel yang diubah siswa: menaikkan slider ke 1.000 W/m²
   langsung memberi label **"Siang terik"**, sedangkan 200 W/m² memberi
   **"Fajar"**. Jam hanya menentukan arah — pagi sebelum tengah hari, sore
   sesudahnya — dan elevasi ≥ 50° selalu terbaca "Siang" agar pukul 12.00 tidak
@@ -181,7 +183,7 @@ dibandingkan).
 - **Cuaca mengalikan cahaya yang sampai ke panel (POA), bukan intensitas
   sumbernya.** Matahari di gambar tetap terang dan nilai "Intensitas sumber"
   tidak diubah cuaca; yang berubah adalah `P DC = POA × A × η`. Ini penting
-  agar intensitas tetap bersih sebagai variabel kontrol.
+  agar intensitas sumber tetap bersih sebagai variabel yang kamu ubah.
 - **Awan lewat** hanya muncul di cuaca Cerah saat eksplorasi: kira-kira tiap
   11 detik ada awan menutup panel selama ±4 detik dan menurunkan POA sampai
   sekitar 40 %, lalu pulih mulus (`PASSING` di plts/model.js). Nilai terendah
@@ -217,11 +219,34 @@ terus terang bahwa rugi trafo serta saluran transmisi tidak dimodelkan.
 
 ## Alur LKPD
 
-1. **Identitas** — kelas, kelompok, tanggal, anggota, pilihan percobaan
+1. **Identitas** — kelas, kelompok, tanggal, anggota, pilihan tabel yang dikumpulkan
 2. **Persiapan** — tujuan, petunjuk, variabel, alat & bahan, langkah kerja
 3. **Hipotesis**
-4. **Pengamatan** — tabel percobaan 1 & 2, minimal 3 baris, maksimal 20
+4. **Pengamatan** — dua tabel (Tabel 1 & Tabel 2), minimal 3 baris, maksimal 20
 5. **Analisis & kesimpulan**
+
+**Kedua variabel bebas diubah.** Tidak ada lagi pemilih "Percobaan 1 / Percobaan
+2" yang mengunci salah satu slider. Di PLTB kecepatan angin dan jumlah bilah
+sama-sama aktif; di PLTS intensitas sumber dan sudut panel sama-sama aktif; di
+PLTA tinggi air dan debit sama-sama aktif. Keduanya hanya dikunci sementara
+percobaan berjalan agar angka yang dicatat tidak bergeser.
+
+- **Tombol skenario tetap ada, tetapi hanya mengisi nilai.** Enam tombol cepat
+  (PLTB: 6/8/10 m/s dan 2/3/4 bilah; PLTS: 400/700/1.000 W/m² dan 0°/30°/75°)
+  memasang satu nilai lalu membiarkan variabel lain tetap seperti yang kamu
+  pilih. Sesudah itu keduanya masih bisa digeser bebas.
+- **Pencatatan memilih tabel tujuan.** Di dekat tombol Catat ada pilihan kecil
+  *Catat ke tabel* dengan dua opsi (mis. "Tabel 1 · Kecepatan angin" / "Tabel 2 ·
+  Jumlah bilah"). Nilai yang tercatat selalu pasangan kedua variabel, jadi kedua
+  tabel tetap terisi lengkap meski urutan percobaan bebas.
+- **Label kolom netral.** Keterangan "kontrol"/"manipulasi" pada header tabel
+  sudah dihapus; kolom kini hanya menyebut besaran dan satuannya (mis. "Jumlah
+  bilah (bilah)"). LKPD yang sudah dicetak sebelumnya tetap terpakai karena
+  jumlah dan urutan kolom tidak berubah.
+- **Pemeriksaan baris kembar.** Karena kedua kolom boleh berubah, pemeriksaan
+  tidak lagi menuntut kolom pertama seragam. Yang diperiksa: dua baris dengan
+  pasangan nilai yang sama (tidak memberi informasi baru). Pesannya: "ada baris
+  yang memakai nilai sama; ubah minimal satu variabel."
 
 Jawaban tersimpan otomatis di `localStorage` browser. Tombol **Unduh PDF**
 menghasilkan LKPD lengkap; **Unduh jawaban (.txt)** menghasilkan salinan teks.

@@ -10,7 +10,7 @@
   var Process = window.PLTBProcess;
 
   var controls = {
-    experiment: $('#experiment'),
+    recordTarget: $('#record-target'),
     speed: $('#speed'),
     blades: $('#blades'),
     load: $('#load'),
@@ -45,23 +45,21 @@
     types: [
       {
         id: 'wind',
-        title: 'Percobaan 1 · Kecepatan angin',
-        heading: 'Percobaan 1 · Kecepatan angin',
+        title: 'Tabel 1 · Kecepatan angin',
+        heading: 'Tabel 1 · Kecepatan angin',
         controlLabel: 'Jumlah bilah',
         variableLabel: 'Kecepatan angin',
         analysisField: 'analisis1',
-        analysisLabel: 'Percobaan 1 · Kecepatan angin',
-        controlHint: 'Jumlah bilah sebaiknya tetap di semua baris karena menjadi variabel kontrol.'
+        analysisLabel: 'Tabel 1 · Kecepatan angin'
       },
       {
         id: 'blades',
-        title: 'Percobaan 2 · Jumlah bilah',
-        heading: 'Percobaan 2 · Jumlah bilah',
+        title: 'Tabel 2 · Jumlah bilah',
+        heading: 'Tabel 2 · Jumlah bilah',
         controlLabel: 'Kecepatan angin',
         variableLabel: 'Jumlah bilah',
         analysisField: 'analisis2',
-        analysisLabel: 'Percobaan 2 · Jumlah bilah',
-        controlHint: 'Kecepatan angin sebaiknya tetap di semua baris karena menjadi variabel kontrol.'
+        analysisLabel: 'Tabel 2 · Jumlah bilah'
       }
     ],
     onStart: function (type) {
@@ -195,11 +193,12 @@
   }
 
   function updateLocks() {
-    var type = controls.experiment.value;
     var gusts = controls.windMode.value === 'gusts';
-    controls.speed.disabled = running || type === 'blades';
-    controls.blades.disabled = running || type === 'wind';
-    controls.experiment.disabled = running;
+    // Kedua variabel bebas: slider kecepatan dan pemilih bilah hanya dikunci
+    // selama percobaan berjalan supaya angka yang dicatat tidak bergeser.
+    controls.speed.disabled = running;
+    controls.blades.disabled = running;
+    controls.recordTarget.disabled = running;
     controls.duration.disabled = running;
     controls.load.disabled = running;
     controls.windMode.disabled = running;
@@ -213,30 +212,41 @@
     updateControlMeters();
   }
 
+  // Nilai cepat untuk masing-masing variabel. Memilih satu tombol hanya
+  // memasang nilai variabel itu; variabel lain dibiarkan apa adanya.
+  var QUICK_VALUES = [
+    { field: 'speed', value: 6, label: '6 m/s' },
+    { field: 'speed', value: 8, label: '8 m/s' },
+    { field: 'speed', value: 10, label: '10 m/s' },
+    { field: 'blades', value: 2, label: '2 bilah' },
+    { field: 'blades', value: 3, label: '3 bilah' },
+    { field: 'blades', value: 4, label: '4 bilah' }
+  ];
+
   function updateScenarioButtons() {
-    var type = controls.experiment.value;
-    var values = type === 'wind' ? [6, 8, 10] : [2, 3, 4];
     var root = $('#scenario-options');
 
-    $('#scenario-description').textContent = type === 'wind'
-      ? '3 bilah tetap · angin 6, 8, lalu 10 m/s · masing-masing 30 detik.'
-      : 'Angin 6 m/s tetap · 2, 3, lalu 4 bilah · masing-masing 30 detik.';
+    $('#scenario-description').textContent =
+      'Pilih nilai cepat untuk salah satu variabel. Nilai variabel lainnya tetap bisa kamu ubah sendiri.';
 
-    var signature = type + ':' + values.join(',');
+    var signature = QUICK_VALUES.map(function (item) {
+      return item.field + item.value;
+    }).join(',');
+
     if (root.dataset.signature !== signature) {
       root.replaceChildren();
-      values.forEach(function (value) {
+      QUICK_VALUES.forEach(function (item) {
         var button = document.createElement('button');
         button.type = 'button';
-        button.dataset.value = String(value);
-        button.textContent = value + (type === 'wind' ? ' m/s' : ' bilah');
+        button.dataset.value = String(item.value);
+        button.dataset.field = item.field;
+        button.textContent = item.label;
         button.addEventListener('click', function () {
           if (running) return;
           controls.windMode.value = 'stable';
           controls.duration.value = '30';
           controls.load.value = '100';
-          controls.speed.value = type === 'wind' ? value : 6;
-          controls.blades.value = type === 'wind' ? 3 : value;
+          controls[item.field].value = String(item.value);
           reset();
         });
         root.append(button);
@@ -246,11 +256,8 @@
 
     Array.prototype.forEach.call(root.children, function (button) {
       button.disabled = running;
-      var matches = controls.windMode.value === 'stable' && +controls.duration.value === 30 && (
-        type === 'wind'
-          ? +controls.blades.value === 3 && +controls.speed.value === +button.dataset.value
-          : +controls.speed.value === 6 && +controls.blades.value === +button.dataset.value
-      );
+      var matches = controls.windMode.value === 'stable' && +controls.duration.value === 30 &&
+        +controls[button.dataset.field].value === +button.dataset.value;
       button.setAttribute('aria-pressed', String(matches));
     });
   }
@@ -460,7 +467,7 @@
 
   $('#record').addEventListener('click', function () {
     if (!canRecord()) return;
-    var type = controls.experiment.value;
+    var type = controls.recordTarget.value;
     var record = {
       control: type === 'wind' ? controls.blades.value : controls.speed.value,
       variable: type === 'wind' ? controls.speed.value : controls.blades.value,
@@ -473,14 +480,14 @@
     if (saved) runRecorded = true;
     updateRecordAvailability();
     $('#message').textContent = saved
-      ? 'Hasil akhir dicatat ke ' + (type === 'wind' ? 'Percobaan 1' : 'Percobaan 2') + '.'
+      ? 'Hasil akhir dicatat ke ' + (type === 'wind' ? 'tabel kecepatan angin' : 'tabel jumlah bilah') + '.'
       : 'Tabel sudah berisi 20 pengamatan.';
   });
 
   /* ---------------- percobaan ---------------- */
 
   function configureExperiment(type) {
-    controls.experiment.value = type;
+    controls.recordTarget.value = type;
     controls.windMode.value = 'stable';
     var rows = sheet.rows[type] || [];
     var first = null;
@@ -496,16 +503,14 @@
       else if (type === 'blades' && control >= 0 && control <= 28) controls.speed.value = control;
     } else {
       controls.speed.value = '6';
-      controls.blades.value = type === 'wind' ? '3' : '2';
+      controls.blades.value = '3';
       controls.duration.value = '30';
     }
     reset();
     $('#sim').scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
-  controls.experiment.addEventListener('change', function () {
-    configureExperiment(controls.experiment.value);
-  });
+  controls.recordTarget.addEventListener('change', reset);
   controls.blades.addEventListener('change', reset);
   controls.speed.addEventListener('input', reset);
   controls.duration.addEventListener('input', reset);
@@ -544,7 +549,7 @@
       '</dl>' +
       '<p>Sudut bilah diatur otomatis ketika kapasitas tercapai. Indikator menunjukkan posisi aman 90° saat angin terlalu kuat. Ukuran bilah pada ilustrasi tetap; angka sudut ini ilustratif dan bukan hasil model aerodinamika rinci.</p>' +
       '<p>LED LKPD menunjukkan tingkat daya generator. Rumah mewakili sekumpulan pengguna; kebutuhan 50–200 kW merupakan beban kawasan. Lampu rumah adalah indikator kecukupan kontribusi PLTB sesudah rugi penyaluran. Lampu padam pada gambar tidak berarti rumah yang terhubung jaringan nyata langsung mati.</p>' +
-      '<p>Untuk LKPD gunakan angin stabil, durasi yang sama, dan catat hasil setelah selesai. Kesimpulan jumlah bilah hanya berlaku untuk kondisi model yang diamati, bukan semua turbin nyata. Angin berembus memakai variasi sintetis sekitar nilai acuan; mode eksplorasi ini tidak bisa dicatat ke tabel agar variabel kontrol tetap jelas.</p>');
+      '<p>Untuk LKPD gunakan angin stabil, durasi yang sama, dan catat hasil setelah selesai. Kesimpulan jumlah bilah hanya berlaku untuk kondisi model yang diamati, bukan semua turbin nyata. Angin berembus memakai variasi sintetis sekitar nilai acuan; mode eksplorasi ini tidak bisa dicatat ke tabel agar angka yang dibandingkan tetap sebanding.</p>');
   });
 
   $('#components').addEventListener('click', function () {
@@ -647,7 +652,7 @@
   $('#help').addEventListener('click', function () {
     showInfo('<h2>Mulai penyelidikan</h2><ol>' +
       '<li>Siapkan buku catatan dan tulis hipotesis.</li>' +
-      '<li>Pilih percobaan. Ubah satu variabel dan jaga variabel kontrol tetap.</li>' +
+      '<li>Pilih tabel tujuan catat, lalu ubah satu variabel lebih dulu agar pengaruhnya terbaca. Kedua variabel tetap bebas kamu sesuaikan.</li>' +
       '<li>Tekan Mulai. Amati putaran, daya, dan pasokan ke rumah. Di ponsel, geser gambar ke samping.</li>' +
       '<li>Catat hasil di buku, lalu lengkapi dan kirim LKPD.</li></ol>');
   });

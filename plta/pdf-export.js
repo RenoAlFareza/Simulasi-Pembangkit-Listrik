@@ -41,7 +41,7 @@
   heading('01 / IDENTITAS KELOMPOK','Identitas peserta didik');
   for(const pair of [[['Kelas',f.kelas],['Kelompok',f.kelompok]],[['Tanggal percobaan',f.tanggal],['Mode',operator?'Operasi waduk':'Percobaan dasar']]]){const wrapped=pair.map(([label,val])=>({label,lines:wrap(val||'—',font,10,225)})),height=Math.max(...wrapped.map(v=>v.lines.length))*15+32;room(height+12);wrapped.forEach((item,j)=>{const x=42+j*263;page.drawRectangle({x,y:y-height,width:248,height,color:cream,borderColor:line,borderWidth:.6});draw(item.label,x+12,y-15,8,muted);item.lines.forEach((l,i)=>draw(l,x+12,y-33-i*15,10));});y-=height+24;}
   answer('Nama anggota kelompok',f.anggota);
-  heading('02 / PERSIAPAN','Pahami sebelum mencoba.');paragraph(operator?'Amati hubungan pasokan sungai, bukaan pintu, tampungan, daya, dan energi. Bandingkan percobaan dengan durasi, skala waktu, serta kondisi awal yang sama.':'Percobaan 1: ubah tinggi air dengan debit tetap. Percobaan 2: ubah debit dengan tinggi tetap. Gunakan minimal tiga kondisi berbeda.');paragraph('Catat pengamatan di buku. Jelaskan pola dengan kata-kata sendiri sebelum mengumpulkan LKPD.');
+  heading('02 / PERSIAPAN','Pahami sebelum mencoba.');paragraph(operator?'Amati hubungan pasokan sungai, bukaan pintu, tampungan, daya, dan energi. Bandingkan percobaan dengan durasi, skala waktu, serta kondisi awal yang sama.':'Isi dua tabel pengamatan: Tabel 1 untuk ketinggian air dan Tabel 2 untuk debit air. Kedua variabel bebas diubah; gunakan minimal tiga kondisi berbeda pada tiap tabel.');paragraph('Catat pengamatan di buku. Jelaskan pola dengan kata-kata sendiri sebelum mengumpulkan LKPD.');
   heading('03 / SEBELUM MENYELIDIKI','Apa dugaanmu?');answer('Hipotesis',f.hipotesis);
   fresh();heading('04 / HASIL DAN PEMBAHASAN','Hasil pengamatan');
   if(operator){
@@ -58,7 +58,7 @@
    });
   }else{
    for(const type of ['height','flow']){
-    const title=type==='height'?'Percobaan 1 - Pengaruh ketinggian air':'Percobaan 2 - Pengaruh debit air',control=type==='height'?'Kontrol: debit air tetap. Manipulasi: ketinggian air.':'Kontrol: ketinggian air tetap. Manipulasi: debit air.';
+    const title=type==='height'?'Tabel 1 - Pengaruh ketinggian air':'Tabel 2 - Pengaruh debit air',control='Isi debit air dan ketinggian air pada setiap baris.';
     const widths=[29,79,79,82,103,139],headers=type==='height'?['No.','Debit air\n(m³/s)','Ketinggian\n(m)','Daya listrik\n(MW)','Pasokan beban','Waktu\nteramati / durasi']:['No.','Ketinggian\n(m)','Debit air\n(m³/s)','Daya listrik\n(MW)','Pasokan beban','Waktu\nteramati / durasi'];
     function cells(values,height,header=false){let x=42;values.forEach((val,j)=>{page.drawRectangle({x,y:y-height,width:widths[j],height,color:header?pale:white,borderColor:line,borderWidth:.65});const ls=wrap(String(val),font,header?8:9,widths[j]-12),lh=12,top=y-height/2+(ls.length-1)*lh/2-3;ls.forEach((l,i)=>draw(l,x+(widths[j]-font.widthOfTextAtSize(l,header?8:9))/2,top-i*lh,header?8:9,header?green:ink));x+=widths[j];});y-=height;}
     function tableHead(continued=false){room(120);draw(title+(continued?' (lanjutan)':''),42,y,12,green);y-=23;draw(control,42,y,9,muted);y-=19;cells(headers,42,true);}
@@ -68,7 +68,7 @@
     const extras=rows.map((r,i)=>r.energy!==''&&r.energy!=null?`Baris ${i+1}: energi ${number(r.energy,6)} MWh; beban ${r.demand||'—'} MW.`:'').filter(Boolean);for(const l of extras)paragraph(l,8);y-=14;
    }
   }
-  fresh();heading('05 / MEMAKNAI HASIL','Analisis & kesimpulan');if(operator)answer('Operasi waduk - hubungan tampungan dan produksi',f.analisisOperator);else{answer('Percobaan 1 - Ketinggian air',f.analisis1);answer('Percobaan 2 - Debit air',f.analisis2);}answer('Kesimpulan',f.kesimpulan);
+  fresh();heading('05 / MEMAKNAI HASIL','Analisis & kesimpulan');if(operator)answer('Operasi waduk - hubungan tampungan dan produksi',f.analisisOperator);else{answer('Tabel 1 - Ketinggian air',f.analisis1);answer('Tabel 2 - Debit air',f.analisis2);}answer('Kesimpulan',f.kesimpulan);
   if(operator&&Array.isArray(payload.charts)){
    const data=payload.charts.filter(r=>Number.isFinite(r.t)&&Number.isFinite(r.h)&&Number.isFinite(r.p)).slice(0,800);if(data.length>1){fresh();heading('LAMPIRAN / GRAFIK SESI TERAKHIR','Tinggi air & daya listrik');for(const [key,label,color]of [['h','Tinggi air (m)',green],['p','Daya listrik (MW)',rgb(.75,.48,.25)]]){const top=y;draw(label,54,top,12,green);const x=82,bottom=top-188,w=440,h=155,values=data.map(r=>r[key]),lo=Math.max(0,Math.min(...values)-.25),hi=Math.max(lo+1,Math.max(...values)+.25),end=Math.max(1,data.at(-1).t);for(let i=0;i<4;i++){const yy=bottom+i*h/3;page.drawLine({start:{x,y:yy},end:{x:x+w,y:yy},color:line,thickness:.5});draw(number(lo+(hi-lo)*i/3,1),42,yy-3,8,muted);}for(let i=1;i<data.length;i++)page.drawLine({start:{x:x+data[i-1].t/end*w,y:bottom+(data[i-1][key]-lo)/(hi-lo)*h},end:{x:x+data[i].t/end*w,y:bottom+(data[i][key]-lo)/(hi-lo)*h},color,thickness:1.5});draw('Waktu operasi: 0 → '+clock(end),82,bottom-21,9,muted);y=bottom-64;}}}
   const total=doc.getPageCount();for(const [i,p]of doc.getPages().entries()){page=p;page.drawLine({start:{x:42,y:45},end:{x:553,y:45},color:line,thickness:.7});draw(options.draft?'DRAF - isian belum lengkap':'PLTA - LKPD digital',42,29,8,muted);draw(`${i+1} / ${total}`,515,29,8,muted);}

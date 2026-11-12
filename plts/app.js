@@ -11,7 +11,7 @@
   var MODEL_NOTE = window.PLTSContent.MODEL_NOTE;
 
   var controls = {
-    experiment: $('#experiment'),
+    recordTarget: $('#record-target'),
     irradiance: $('#irradiance'),
     tilt: $('#tilt'),
     weather: $('#weather'),
@@ -64,23 +64,21 @@
     types: [
       {
         id: 'light',
-        title: 'Percobaan 1 · Intensitas cahaya',
-        heading: 'Percobaan 1 · Intensitas cahaya',
+        title: 'Tabel 1 · Intensitas cahaya',
+        heading: 'Tabel 1 · Intensitas cahaya',
         controlLabel: 'Sudut panel',
         variableLabel: 'Intensitas cahaya',
         analysisField: 'analisis1',
-        analysisLabel: 'Percobaan 1 · Intensitas cahaya',
-        controlHint: 'Sudut panel sebaiknya tetap di semua baris karena menjadi variabel kontrol.'
+        analysisLabel: 'Tabel 1 · Intensitas cahaya'
       },
       {
         id: 'tilt',
-        title: 'Percobaan 2 · Sudut panel',
-        heading: 'Percobaan 2 · Sudut panel',
+        title: 'Tabel 2 · Sudut panel',
+        heading: 'Tabel 2 · Sudut panel',
         controlLabel: 'Intensitas cahaya',
         variableLabel: 'Sudut panel',
         analysisField: 'analisis2',
-        analysisLabel: 'Percobaan 2 · Sudut panel',
-        controlHint: 'Intensitas cahaya sebaiknya tetap di semua baris karena menjadi variabel kontrol.'
+        analysisLabel: 'Tabel 2 · Sudut panel'
       }
     ],
     onStart: function (type) {
@@ -208,8 +206,8 @@
   }
 
   /* Nama fase diturunkan dari tingkat cahaya (intensitas sumber), bukan dari jam
-     dinding. Intensitas adalah variabel kontrol LKPD: 1.000 W/m² harus terbaca
-     "Siang", bukan "Fajar". Jam hanya menentukan arah pagi atau sore. */
+     dinding. Intensitas adalah variabel yang diubah siswa: 1.000 W/m² harus
+     terbaca "Siang", bukan "Fajar". Jam hanya menentukan arah pagi atau sore. */
   function skyLabel(bright, progress, elevation) {
     // Di dekat ufuk label mengikuti posisi matahari: 400 W/m² pada pukul 06.00
     // tetap "Fajar" karena matahari baru terbit. Namun cahaya penuh (≥0,62) tetap
@@ -251,7 +249,7 @@
     var daylight = Model.daylightFactor(elevation);
 
     // Kecerahan langit ditentukan intensitas sumber yang dipilih - inilah variabel
-    // kontrol LKPD, jadi 1.000 W/m2 harus terbaca "Siang". Cuaca tidak mengubah
+    // utama LKPD, jadi 1.000 W/m2 harus terbaca "Siang". Cuaca tidak mengubah
     // nilai ini: cuaca menahan cahaya sebelum sampai ke panel, bukan meredupkan
     // matahari.
     var bright = clamp01(Math.max(0, +controls.irradiance.value) / 1000);
@@ -483,10 +481,12 @@
   /* ---------------- kunci kontrol ---------------- */
 
   function locks() {
-    var type = controls.experiment.value;
-    controls.irradiance.disabled = running || type === 'tilt';
-    controls.tilt.disabled = running || type === 'light';
-    ['experiment', 'weather', 'load', 'duration'].forEach(function (key) {
+    // Kedua variabel bebas: intensitas dan sudut panel hanya dikunci selama
+    // percobaan berjalan supaya angka yang dicatat tidak bergeser.
+    controls.irradiance.disabled = running;
+    controls.tilt.disabled = running;
+    controls.recordTarget.disabled = running;
+    ['weather', 'load', 'duration'].forEach(function (key) {
       controls[key].disabled = running;
     });
 
@@ -543,31 +543,42 @@
     recordState();
   }
 
+  // Nilai cepat untuk masing-masing variabel. Memilih satu tombol hanya
+  // memasang nilai variabel itu; variabel lain dibiarkan apa adanya.
+  var QUICK_VALUES = [
+    { field: 'irradiance', value: 400, label: '400 W/m²' },
+    { field: 'irradiance', value: 700, label: '700 W/m²' },
+    { field: 'irradiance', value: 1000, label: '1.000 W/m²' },
+    { field: 'tilt', value: 0, label: '0°' },
+    { field: 'tilt', value: 30, label: '30°' },
+    { field: 'tilt', value: 75, label: '75°' }
+  ];
+
   function recommendations() {
-    var type = controls.experiment.value;
-    var values = type === 'light' ? [400, 700, 1000] : [0, 30, 75];
     var root = $('#scenario-options');
 
-    $('#scenario-description').textContent = type === 'light'
-      ? 'Sudut 30° tetap · intensitas 400, 700, 1.000 W/m².'
-      : 'Intensitas 800 W/m² tetap · sudut 0°, 30°, 75°.';
+    $('#scenario-description').textContent =
+      'Pilih nilai cepat untuk salah satu variabel. Nilai variabel lainnya tetap bisa kamu ubah sendiri.';
 
-    var signature = type + ':' + values.join(',');
+    var signature = QUICK_VALUES.map(function (item) {
+      return item.field + item.value;
+    }).join(',');
+
     if (root.dataset.signature !== signature) {
       root.replaceChildren();
-      values.forEach(function (value) {
+      QUICK_VALUES.forEach(function (item) {
         var button = document.createElement('button');
         button.type = 'button';
-        button.dataset.value = String(value);
-        button.textContent = value + (type === 'light' ? ' W/m²' : '°');
+        button.dataset.value = String(item.value);
+        button.dataset.field = item.field;
+        button.textContent = item.label;
         button.addEventListener('click', function () {
           if (running) return;
           controls.weather.value = 'lkpd';
           controls.duration.value = '30';
           controls.dayStart.value = String(STANDARD_START);
           controls.daySpan.value = String(STANDARD_SPAN);
-          controls.irradiance.value = type === 'light' ? value : 800;
-          controls.tilt.value = type === 'light' ? 30 : value;
+          controls[item.field].value = String(item.value);
           reset();
         });
         root.append(button);
@@ -577,11 +588,8 @@
 
     Array.prototype.forEach.call(root.children, function (button) {
       button.disabled = running;
-      var matches = controls.weather.value === 'lkpd' && +controls.duration.value === 30 && (
-        type === 'light'
-          ? +controls.tilt.value === 30 && +controls.irradiance.value === +button.dataset.value
-          : +controls.irradiance.value === 800 && +controls.tilt.value === +button.dataset.value
-      );
+      var matches = controls.weather.value === 'lkpd' && +controls.duration.value === 30 &&
+        +controls[button.dataset.field].value === +button.dataset.value;
       button.setAttribute('aria-pressed', String(matches));
     });
   }
@@ -757,7 +765,7 @@
 
   $('#record').addEventListener('click', function () {
     if (!canRecord()) return;
-    var type = controls.experiment.value;
+    var type = controls.recordTarget.value;
     var saved = sheet.addObservation(type, {
       control: type === 'light' ? controls.tilt.value : controls.irradiance.value,
       variable: type === 'light' ? controls.irradiance.value : controls.tilt.value,
@@ -769,20 +777,20 @@
     if (saved) recorded = true;
     recordState();
     $('#message').textContent = saved
-      ? 'Hasil akhir dicatat ke LKPD.'
+      ? 'Hasil akhir dicatat ke ' + (type === 'light' ? 'tabel intensitas cahaya' : 'tabel sudut panel') + '.'
       : 'Tabel sudah berisi 20 pengamatan.';
   });
 
   /* ---------------- percobaan ---------------- */
 
   function configureExperiment(type) {
-    controls.experiment.value = type;
+    controls.recordTarget.value = type;
     controls.weather.value = 'lkpd';
     controls.duration.value = '30';
     controls.dayStart.value = String(STANDARD_START);
     controls.daySpan.value = String(STANDARD_SPAN);
-    controls.irradiance.value = type === 'light' ? 400 : 800;
-    controls.tilt.value = type === 'light' ? 30 : 0;
+    controls.irradiance.value = '400';
+    controls.tilt.value = '30';
     var rows = sheet.rows[type] || [];
     var first = null;
     for (var i = 0; i < rows.length; i += 1) {
@@ -800,9 +808,7 @@
     $('#sim').scrollIntoView({ behavior: 'smooth' });
   }
 
-  controls.experiment.addEventListener('change', function () {
-    configureExperiment(controls.experiment.value);
-  });
+  controls.recordTarget.addEventListener('change', reset);
   [controls.irradiance, controls.tilt, controls.duration].forEach(function (input) {
     input.addEventListener('input', reset);
   });
@@ -844,7 +850,7 @@
       '<dt>MWp, MW, kWh</dt><dd>1 MWp adalah kapasitas nominal acuan. MW merupakan daya aktual; kWh adalah energi selama percobaan. 1 MW = 1.000 kW.</dd>' +
       '<dt>Waktu</dt><dd>Percobaan adalah time-lapse: 30 detik mewakili beberapa jam. Pada mode LKPD, 30 detik mewakili 06:00–12:00 sehingga matahari terbit lalu naik dan angka dicatat saat tepat di puncak (elevasi 60°). Pada eksplorasi, jam mulai dan lama hari dapat diubah sampai 15 jam, sehingga matahari bisa naik, turun, atau melewati malam. Daya yang dibaca adalah daya sesaat; energi dijumlahkan sepanjang percobaan.</dd>' +
       '<dt>Suhu sel</dt><dd>Mode LKPD memakai 25°C tetap. Pada eksplorasi, sel lebih panas mengurangi efisiensi menurut asumsi model; lebih panas tidak selalu lebih banyak listrik.</dd>' +
-      '<dt>Cuaca</dt><dd>Cerah meneruskan seluruh cahaya. Mendung menahan sekitar 55% cahaya dan hujan sekitar 75%, sehingga G panel turun sementara intensitas sumber tetap. Angka itu dipakai sebagai faktor pada G panel, bukan pada nilai intensitas, supaya intensitas tetap bersih sebagai variabel kontrol. Pada cuaca cerah, awan sesekali lewat dan menutup panel beberapa detik; daya turun lalu pulih. Baris Terendah mencatat nilai terendah setelah panel menerima cahaya minimal 300 W/m², jadi nilai itu menggambarkan penurunan karena awan, bukan karena matahari belum terbit.</dd>' +
+      '<dt>Cuaca</dt><dd>Cerah meneruskan seluruh cahaya. Mendung menahan sekitar 55% cahaya dan hujan sekitar 75%, sehingga G panel turun sementara intensitas sumber tetap. Angka itu dipakai sebagai faktor pada G panel, bukan pada nilai intensitas, supaya intensitas sumber tetap bersih sebagai variabel yang kamu ubah. Pada cuaca cerah, awan sesekali lewat dan menutup panel beberapa detik; daya turun lalu pulih. Baris Terendah mencatat nilai terendah setelah panel menerima cahaya minimal 300 W/m², jadi nilai itu menggambarkan penurunan karena awan, bukan karena matahari belum terbit.</dd>' +
       '</dl><p>' + MODEL_NOTE + '</p>');
   });
 

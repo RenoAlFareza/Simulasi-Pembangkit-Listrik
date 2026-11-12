@@ -133,23 +133,17 @@
 
       if (!list.length) return items;
 
-      var controls = list.map(function (item) {
-        return String(item.row.control || '').trim();
-      }).filter(Boolean);
-      if (controls.length && controls.some(function (value) {
-        return value !== controls[0];
-      })) {
-        items.push(type.controlHint || 'Variabel kontrol sebaiknya tetap di semua baris.');
-      }
-
+      // Kedua kolom boleh berubah, jadi yang diperiksa bukan lagi ketetapan
+      // kolom pertama melainkan baris kembar: dua baris dengan isi sama tidak
+      // memberi informasi baru.
       var seen = {};
       list.forEach(function (item) {
-        var value = String(item.row.variable || '').trim();
-        if (!value) return;
-        if (seen[value]) {
-          items.push('Nilai manipulasi ' + value + ' muncul lebih dari sekali (baris ' + seen[value] + ' dan ' + (item.index + 1) + ').');
+        var pair = String(item.row.control || '').trim() + '|' + String(item.row.variable || '').trim();
+        if (pair === '|') return;
+        if (seen[pair]) {
+          items.push('Baris ' + (item.index + 1) + ' memakai nilai yang sama dengan baris ' + seen[pair] + '.');
         } else {
-          seen[value] = item.index + 1;
+          seen[pair] = item.index + 1;
         }
       });
 

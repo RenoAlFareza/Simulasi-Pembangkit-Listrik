@@ -220,7 +220,7 @@
       room(60);
       draw(answerBlock.heading, 54, y, 11, green);
       y -= 18;
-      draw(answerBlock.controlLabel + ' (kontrol)  ·  ' + answerBlock.variableLabel + ' (manipulasi)', 54, y, 8, muted);
+      draw(answerBlock.controlLabel + '  ·  ' + answerBlock.variableLabel, 54, y, 8, muted);
       y -= 18;
       tableHead(['No.', answerBlock.controlLabel, answerBlock.variableLabel, 'Daya (MW)', 'LED', 'Waktu (s)', '']);
       if (!answerBlock.rows.length) {

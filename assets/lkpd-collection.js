@@ -74,28 +74,22 @@
 
       if (!rows.length) return;
 
-      var first = text(rows[0].control);
-      if (first && rows.some(function (row) {
-        return Math.abs(Number(text(row.control).replace(',', '.')) - Number(first.replace(',', '.'))) > 1e-8;
-      })) {
+      // Kedua variabel bebas, jadi syaratnya bukan lagi "kolom pertama tetap"
+      // melainkan setiap baris harus menguji pasangan nilai yang berbeda.
+      var pairs = {};
+      var duplicate = false;
+      rows.forEach(function (row) {
+        var pair = text(row.control) + '|' + text(row.variable);
+        if (pair === '|') return;
+        if (pairs[pair]) duplicate = true;
+        pairs[pair] = true;
+      });
+      if (duplicate) {
         items.push({
           field: 'observations',
-          message: block.heading + ': variabel kontrol harus tetap di semua baris.'
+          message: block.heading + ': ada baris yang memakai nilai sama; ubah minimal satu variabel.'
         });
       }
-
-      var seen = {};
-      rows.forEach(function (row) {
-        var value = text(row.variable);
-        if (!value) return;
-        if (seen[value]) {
-          items.push({
-            field: 'observations',
-            message: block.heading + ': nilai manipulasi ' + value + ' muncul lebih dari sekali.'
-          });
-        }
-        seen[value] = true;
-      });
     });
 
     if (!text(payload.kesimpulan)) items.push({ field: 'kesimpulan', message: 'Kesimpulan belum diisi.' });

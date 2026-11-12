@@ -97,3 +97,6 @@ body.sky-night #sunRays{animation-play-state:paused!important}
 }
 
 @media(prefers-reduced-motion:reduce){#skyRain{animation:none}}
+
+.record-target{display:block;margin-top:16px;margin-bottom:10px}
+#scenario-options{flex-wrap:wrap}

@@ -5,14 +5,14 @@ const Engine=window.PLTAPhysics, KEY='plta-lkpd-v1', MAX_POWER=83.385;
 const PRESETS=Engine.PRESETS, icons={dry:'☀',transition:'◒',wet:'☂',manual:'≋'};
 const newRow=()=>({h:'',q:'',p:'',led:'',t:'',duration:'',weather:'',energy:'',demand:''});
 const emptyRows=()=>Array.from({length:3},newRow);
-let state={model:'operator',h:60,q:40,mode:'free',preset:'manual',duration:30,gate:60,inflow:55,release:5,scale:600,demand:20,fields:{},rows:{height:emptyRows(),flow:emptyRows()},operatorRows:[]};
+let state={model:'operator',h:60,q:40,recordTarget:'height',preset:'manual',duration:30,gate:60,inflow:55,release:5,scale:600,demand:20,fields:{},rows:{height:emptyRows(),flow:emptyRows()},operatorRows:[]};
 let storageOK=true;
 try{
  const saved=JSON.parse(localStorage.getItem(KEY)||'null');
  if(saved?.version===1){
   for(const [key,lo,hi] of [['h',0,100],['q',0,100],['gate',0,100],['inflow',0,200],['release',0,30]])if(Number.isFinite(saved[key]))state[key]=Math.max(lo,Math.min(hi,saved[key]));
   if(['operator','basic'].includes(saved.model))state.model=saved.model;
-  if(['free','height','flow'].includes(saved.mode))state.mode=saved.mode;
+  if(['height','flow'].includes(saved.recordTarget))state.recordTarget=saved.recordTarget;
   if(['manual','dry','transition','wet'].includes(saved.preset))state.preset=saved.preset;
   if(PRESETS[state.preset]&&!Number.isFinite(saved.inflow))state.inflow=PRESETS[state.preset].inflow;
   if([30,60,90,120,150,180].includes(saved.duration))state.duration=saved.duration;
@@ -72,8 +72,9 @@ function beforeChange(resetRun=false){if(runState==='paused')return false;syncCl
 function updateWeather(){
  const p=PRESETS[state.preset];$('#weather').value=p?state.preset:'manual';$('#scene-weather-name').textContent=p?p.label:'Kondisi manual';$('#scene-weather-icon').textContent=icons[state.preset]||'≋';
  $('#sky-top').setAttribute('stop-color',state.preset==='wet'?'#d7e6df':state.preset==='dry'?'#f1f0dc':'#e7f2eb');$('#sky-bottom').setAttribute('stop-color','#f5f7eb');$('#sun').setAttribute('opacity',state.preset==='wet'?'.18':'.75');$('#weather-clouds').setAttribute('opacity',state.preset==='wet'?'.95':'.55');$('#rain').setAttribute('opacity',state.preset==='wet'?'.6':'0');
- $('#weather').disabled=runState==='paused'||(op()?runState==='running':state.mode!=='free');
- $('#weather-hint').textContent=!op()&&state.mode!=='free'?'Preset terkunci selama percobaan terkontrol.':'';$('#weather-hint').hidden=!$('#weather-hint').textContent;
+ $('#weather').disabled=runState==='paused'||(op()&&runState==='running');
+ // Kedua variabel bebas: preset hanya memasang nilai awal, tidak mengunci apa pun.
+ $('#weather-hint').textContent='Preset mengisi H dan Q. Keduanya tetap bisa kamu ubah.';$('#weather-hint').hidden=false;
 }
 function render(){
  const paused=runState==='paused',running=runState==='running',finished=runState==='finished';
@@ -82,11 +83,12 @@ function render(){
  $('#choose-basic').setAttribute('aria-pressed',String(!op()));$('#choose-operator').setAttribute('aria-pressed',String(op()));$('#choose-basic').disabled=paused;$('#choose-operator').disabled=paused;
  $('#model-explanation').textContent=op()?'Atur tinggi awal, pintu, pasokan sungai, dan skala waktu. Tinggi air berubah otomatis.':'Ubah satu variabel untuk membandingkan daya. Variabel lainnya dijaga tetap.';
  $('#scene-model-caption').textContent=op()?'Waduk dinamis · waktu '+state.scale+'×':'Percobaan dasar · waktu 1×';
- $('#height-title').textContent=op()?(active()?'Tinggi air saat ini':'Tinggi awal waduk'):'Ketinggian air';$('#height').value=state.h;$('#flow').value=state.q;$('#mode').value=state.mode;
- $('#height').disabled=paused||(op()?running:state.mode==='flow');$('#flow').disabled=paused||state.mode==='height';$('#mode').disabled=paused;
- $('#h-lock').textContent=paused?'Dikunci saat jeda':op()?(running?'Otomatis':'Sebelum mulai'):state.mode==='flow'?'Kontrol · terkunci':'';
- $('#q-lock').textContent=paused?'Dikunci saat jeda':state.mode==='height'?'Kontrol · terkunci':'';
- $('#mode-hint').textContent=state.mode==='height'?'H diubah · Q tetap.':state.mode==='flow'?'Q diubah · H tetap.':'H & Q bebas.';
+ $('#height-title').textContent=op()?(active()?'Tinggi air saat ini':'Tinggi awal waduk'):'Ketinggian air';$('#height').value=state.h;$('#flow').value=state.q;$('#record-target').value=state.recordTarget;
+ // Kedua variabel bebas diubah; H dan Q hanya dikunci saat jeda, atau saat
+ // operasi waduk berjalan (di sana H dihitung otomatis oleh neraca air).
+ $('#height').disabled=paused||(op()&&running);$('#flow').disabled=paused;$('#record-target').disabled=paused;
+ $('#h-lock').textContent=paused?'Dikunci saat jeda':op()?(running?'Otomatis':'Sebelum mulai'):'';
+ $('#q-lock').textContent=paused?'Dikunci saat jeda':'';
  for(const [id,key,out,unit] of [['gate','gate','gate-value','%'],['inflow','inflow','inflow-value','m³/s'],['other-release','release','other-value','m³/s']]){$('#'+id).value=state[key];$('#'+id).disabled=paused;$('#'+out).innerHTML=num(state[key],0)+' <small>'+unit+'</small>';$('#'+id).style.setProperty('--percent',(state[key]/Number($('#'+id).max)*100)+'%');}
  $('#height').style.setProperty('--percent',state.h+'%');$('#flow').style.setProperty('--percent',state.q+'%');
  $('#time-scale').value=state.scale;$('#time-scale').disabled=running||paused;$('#scale-hint').textContent=`${state.duration} detik → ${num(state.duration*state.scale/3600,2)} jam operasi`;
@@ -95,7 +97,7 @@ function render(){
  const already=runMeta&&state.operatorRows.some(r=>r.id===runMeta.id);
  $('#record-text').textContent=op()?'Catat ringkasan LKPD':'Catat ke LKPD';$('#record').disabled=op()?(!finished||already):!active();$('#summary-record').disabled=op()?(!finished||already):!active();
  $('#record').setAttribute('aria-label',op()?'Catat ringkasan operasi ke LKPD':'Catat hasil saat ini ke LKPD');
- $('#record-hint').textContent=op()?(already?'Sudah tercatat.':finished?'Ringkasan siap dicatat.':'Tersedia setelah selesai.'):!active()?'Tekan Mulai untuk menjalankan.':state.mode==='free'?'Pilih percobaan 1/2 sebelum mencatat.':state.rows[state.mode].filter(complete).length+'/'+state.rows[state.mode].length+' pengamatan tercatat.';
+ $('#record-hint').textContent=op()?(already?'Sudah tercatat.':finished?'Ringkasan siap dicatat.':'Tersedia setelah selesai.'):!active()?'Tekan Mulai untuk menjalankan.':state.rows[state.recordTarget].filter(complete).length+'/'+state.rows[state.recordTarget].length+' pengamatan tercatat.';
  $('#timer-hint').textContent=finished?'Hasil dibekukan.':paused?'Kedua jam dijeda.':'Berhenti otomatis saat waktu habis.';
  $('#results-model').textContent=op()?'OPERASI WADUK':'PERCOBAAN DASAR';$('#result-note').hidden=!finished;$('#result-note').textContent=finished?'Selesai · hasil dibekukan.':'';
  $('#power-explanation').textContent=op()?'Daya mengikuti debit aktual, head bersih, efisiensi, dan kapasitas 50 MW. Energi menjumlahkan produksi sepanjang waktu operasi.':'H dan Q tetap menghasilkan daya tetap. Energi tetap bertambah selama percobaan berlangsung.';
@@ -147,11 +149,11 @@ function renderSummary(){
 $('#start').onclick=begin;
 $('#pause').onclick=()=>{syncClock();if(runState==='running'){cancelClock();runState='paused';render();}};
 $('#stop').onclick=()=>{resetClock();runState='stopped';render();notify('Percobaan dihentikan dan dikembalikan ke kondisi awal. Isian LKPD tetap tersimpan.');};
-$('#reset-sim').onclick=()=>{cancelClock();Object.assign(state,{h:60,q:40,mode:'free',preset:'manual',duration:30,gate:60,inflow:55,release:5,scale:600,demand:20});resetClock();render();save();notify('Pengaturan awal dipulihkan. Catatan LKPD tetap tersimpan.');};
+$('#reset-sim').onclick=()=>{cancelClock();Object.assign(state,{h:60,q:40,recordTarget:'height',preset:'manual',duration:30,gate:60,inflow:55,release:5,scale:600,demand:20});resetClock();render();save();notify('Pengaturan awal dipulihkan. Catatan LKPD tetap tersimpan.');};
 function changeModel(model){if(state.model===model)return;state.model=model;resetClock();render();save();}
 $('#choose-basic').onclick=()=>changeModel('basic');$('#choose-operator').onclick=()=>changeModel('operator');
-function selectMode(mode){state.model='basic';state.mode=mode;if(mode!=='free'){const ctrl=mode==='height'?'q':'h',prior=state.rows[mode].find(r=>hasValue(r[ctrl]));if(prior&&Number.isFinite(Number(prior[ctrl])))state[ctrl]=Math.min(100,Math.max(0,Number(prior[ctrl])));}resetClock();render();save();}
-$('#mode').onchange=e=>selectMode(e.target.value);$$('[data-start]').forEach(b=>b.onclick=()=>{selectMode(b.dataset.start);goTo('#sim');});
+function selectMode(type){state.model='basic';state.recordTarget=type;const ctrl=type==='height'?'q':'h',prior=state.rows[type].find(r=>hasValue(r[ctrl]));if(prior&&Number.isFinite(Number(prior[ctrl])))state[ctrl]=Math.min(100,Math.max(0,Number(prior[ctrl])));resetClock();render();save();}
+$('#record-target').onchange=e=>{if(runState==='paused')return;state.recordTarget=e.target.value;render();save();};$$('[data-start]').forEach(b=>b.onclick=()=>{selectMode(b.dataset.start);goTo('#sim');});
 for(const[id,key]of[['height','h'],['flow','q'],['gate','gate'],['inflow','inflow'],['other-release','release']])$('#'+id).oninput=e=>{if(!beforeChange())return;state[key]=Number(e.target.value);if(['h','q','inflow'].includes(key))state.preset='manual';if(active()&&runMeta)runMeta.changes.push({seconds:sim.simSeconds,variable:key,value:state[key]});if(op()&&!active()&&key==='h')resetClock();else Engine.update(sim,cfg());if(active())addSample(true);render();save();};
 $('#weather').onchange=e=>{if(!beforeChange(true))return;state.preset=e.target.value;const p=PRESETS[state.preset];if(p){state.h=p.h;state.q=p.q;state.inflow=p.inflow;}resetClock();render();save();};
 $('#duration').oninput=e=>{if(['running','paused'].includes(runState))return;state.duration=Number(e.target.value);resetClock();render();save();};
@@ -159,11 +161,11 @@ $('#time-scale').onchange=e=>{if(['running','paused'].includes(runState))return;
 $('#demand').onchange=e=>{if(!beforeChange())return;state.demand=Number(e.target.value);Engine.update(sim,cfg());render();save();};
 document.addEventListener('visibilitychange',()=>{if(!document.hidden){syncClock();}});
 function validateRows(type){
- const rows=state.rows[type].filter(r=>hasValue(r.h)||hasValue(r.q)),ctrl=type==='height'?'q':'h',manip=type==='height'?'h':'q';
- const controls=rows.filter(r=>hasValue(r[ctrl])).map(r=>Number(r[ctrl])),values=rows.filter(r=>hasValue(r[manip])).map(r=>Number(r[manip]));
- const messages=[];
- if(new Set(controls).size>1) messages.push(`Variabel kontrol harus sama di semua baris (${ctrl==='q'?'debit':'ketinggian'}).`);
- if(new Set(values).size<values.length) messages.push('Gunakan nilai manipulasi berbeda di setiap baris.');
+ const rows=state.rows[type].filter(r=>hasValue(r.h)||hasValue(r.q));
+ // Kedua variabel bebas, jadi yang diperiksa bukan lagi "kolom kontrol tetap"
+ // melainkan pasangan H/Q kembar: dua baris dengan nilai sama tidak menambah data.
+ const messages=[],pairs={};
+ rows.forEach(r=>{if(!hasValue(r.h)||!hasValue(r.q))return;const pair=String(r.h).trim()+'|'+String(r.q).trim();if(pairs[pair])messages.push('Ada baris dengan pasangan H dan Q yang sama; ubah minimal satu nilai.');pairs[pair]=true;});
  const invalid=state.rows[type].some(r=>['h','q','p'].some(k=>hasValue(r[k])&&(!Number.isFinite(Number(r[k]))||Number(r[k])<0||Number(r[k])>(k==='p'?MAX_POWER:100))));
  if(invalid) messages.push('Periksa batas nilai: tinggi/debit 0–100 dan daya 0–83,385 MW.');
  $('#feedback-'+type).textContent=messages.join(' ');
@@ -174,7 +176,7 @@ function renderRows(){
   const tbody=$('#table-'+type);tbody.replaceChildren();const order=type==='height'?['q','h','p']:['h','q','p'];
   state.rows[type].forEach((row,i)=>{
    const tr=document.createElement('tr'),n=document.createElement('td');n.textContent=i+1;tr.append(n);
-   for(const key of order){const td=document.createElement('td'),input=document.createElement('input');input.type='number';input.min='0';input.max=key==='p'?String(MAX_POWER):'100';input.step='any';input.inputMode='decimal';input.placeholder='—';input.value=row[key];input.setAttribute('aria-label',`${type==='height'?'Percobaan 1':'Percobaan 2'}, baris ${i+1}, ${key==='h'?'ketinggian dalam meter':key==='q'?'debit dalam meter kubik per detik':'daya dalam megawatt'}`);input.oninput=()=>{state.rows[type][i][key]=input.value;clearCapture(state.rows[type][i],tr);validateRows(type);save();};td.append(input);tr.append(td);}
+   for(const key of order){const td=document.createElement('td'),input=document.createElement('input');input.type='number';input.min='0';input.max=key==='p'?String(MAX_POWER):'100';input.step='any';input.inputMode='decimal';input.placeholder='—';input.value=row[key];input.setAttribute('aria-label',`${type==='height'?'Tabel 1':'Tabel 2'}, baris ${i+1}, ${key==='h'?'ketinggian dalam meter':key==='q'?'debit dalam meter kubik per detik':'daya dalam megawatt'}`);input.oninput=()=>{state.rows[type][i][key]=input.value;clearCapture(state.rows[type][i],tr);validateRows(type);save();};td.append(input);tr.append(td);}
    const td=document.createElement('td'),sel=document.createElement('select');sel.setAttribute('aria-label',`Pasokan beban percobaan ${type==='height'?1:2}, baris ${i+1}`);
    ['','Cukup','Kurang','Mati','Redup','Sedang','Terang'].forEach(v=>{const o=document.createElement('option');o.value=v;o.textContent=v||'Pilih';sel.append(o);});sel.value=row.led;sel.onchange=()=>{state.rows[type][i].led=sel.value;clearCapture(state.rows[type][i],tr);save();};td.append(sel);tr.append(td);
    const timing=document.createElement('td');timing.className='observation-time';
@@ -199,10 +201,8 @@ function record(){
   state.operatorRows.push(summaryRecord());renderOperatorRows();render();save();notify('Ringkasan operasi dicatat. Tuliskan penjelasan dengan kata-kata kelompokmu.');return;
  }
  if(!active()){notify('Tekan Mulai sebelum mencatat hasil.');return;}
- if(state.mode==='free'){notify('Pilih Percobaan 1 atau 2 untuk mencatat ke tabel dasar.');$('#mode').focus();return;}
- const type=state.mode,ctrl=type==='height'?'q':'h',manip=type==='height'?'h':'q',rows=state.rows[type];
- if(rows.some(r=>hasValue(r[ctrl])&&Number(r[ctrl])!==state[ctrl])){notify('Nilai kontrol berbeda dari tabel. Samakan kontrol sebelum mencatat.');return;}
- if(rows.some(r=>hasValue(r[manip])&&Number(r[manip])===state[manip])){notify('Nilai manipulasi ini sudah tercatat. Gunakan nilai berbeda.');return;}
+ const type=state.recordTarget,rows=state.rows[type];
+ if(rows.some(r=>hasValue(r.h)&&hasValue(r.q)&&Number(r.h)===Number(state.h)&&Number(r.q)===Number(state.q))){notify('Pasangan H dan Q ini sudah tercatat. Ubah minimal satu variabel.');return;}
  if(rows.some(r=>hasValue(r.demand)&&Number(r.demand)!==state.demand)){notify('Samakan kebutuhan beban contoh dengan pengamatan sebelumnya.');return;}
  const i=rows.findIndex(r=>Object.values(r).every(v=>!hasValue(v)));if(i<0){notify('Semua baris terisi atau terisi sebagian. Tambahkan baris atau periksa tabel.');return;}
  rows[i]={h:state.h,q:state.q,p:Number(sim.powerMW.toFixed(4)),led:supply(sim.powerMW),t:Number(elapsed.toFixed(1)),duration:state.duration,weather:state.preset,energy:sim.energyMWh,demand:state.demand};renderRows();render();save();notify(`Pengamatan ${i+1}/${rows.length} dicatat · ${num(sim.powerMW)} MW.`);
@@ -212,10 +212,10 @@ $('#record').onclick=record;$('#summary-record').onclick=record;
 $$('[data-field]').forEach(el=>{el.value=state.fields[el.dataset.field]||'';el.oninput=()=>{state.fields[el.dataset.field]=el.value;save();};});
 function exportText(){
  const f=state.fields,lines=['LKPD — PLTA','',`Kelas: ${f.kelas||'—'}`,`Kelompok: ${f.kelompok||'—'}`,`Tanggal: ${f.tanggal||'—'}`,`Anggota:\n${f.anggota||'—'}`,'','HIPOTESIS',f.hipotesis||'—','','HASIL PERCOBAAN DASAR'];
- for(const type of ['height','flow']){lines.push('',type==='height'?'Percobaan 1 — H diubah, Q tetap':'Percobaan 2 — Q diubah, H tetap');state.rows[type].forEach((r,i)=>lines.push(`${i+1}. H: ${hasValue(r.h)?r.h:'—'} m | Q: ${hasValue(r.q)?r.q:'—'} m³/s | P: ${hasValue(r.p)?r.p:'—'} MW | Pasokan: ${r.led||'—'} | Beban: ${r.demand||'—'} MW | Waktu: ${hasValue(r.t)?r.t:'—'} / ${r.duration||'—'} detik | Energi: ${hasValue(r.energy)?num(r.energy,6):'—'} MWh`));const warning=$('#feedback-'+type).textContent;if(warning)lines.push('Catatan: '+warning);}
+ for(const type of ['height','flow']){lines.push('',type==='height'?'Tabel 1 — Ketinggian air':'Tabel 2 — Debit air');state.rows[type].forEach((r,i)=>lines.push(`${i+1}. H: ${hasValue(r.h)?r.h:'—'} m | Q: ${hasValue(r.q)?r.q:'—'} m³/s | P: ${hasValue(r.p)?r.p:'—'} MW | Pasokan: ${r.led||'—'} | Beban: ${r.demand||'—'} MW | Waktu: ${hasValue(r.t)?r.t:'—'} / ${r.duration||'—'} detik | Energi: ${hasValue(r.energy)?num(r.energy,6):'—'} MWh`));const warning=$('#feedback-'+type).textContent;if(warning)lines.push('Catatan: '+warning);}
  lines.push('','HASIL OPERASI WADUK');
  state.operatorRows.forEach((r,i)=>lines.push('',`Operasi ${i+1}: ${PRESETS[r.season]?.label||'Manual'} → ${PRESETS[r.finalSeason]?.label||'Manual'}`,`Tinggi awal/akhir: ${num(r.initialH,4)} / ${num(r.finalH,4)} m`,`Bukaan awal/akhir: ${r.initialGate}% / ${r.finalGate}%`,`Sungai awal/akhir: ${num(r.initialInflow)} / ${num(r.finalInflow)} m³/s`,`Waktu percobaan: ${r.duration} detik; skala ${r.scale}×; waktu operasi ${operationTime(r.seconds)}`,`Energi: ${num(r.energy,6)} MWh; daya rata-rata ${num(r.averagePower)} MW; daya akhir ${num(r.finalPower)} MW`,`Air masuk: ${num(r.inflowVolume,0)} m³; air turbin: ${num(r.volume,0)} m³; pelepasan lain: ${num(r.otherVolume,0)} m³; pelimpah: ${num(r.spillVolume,0)} m³`,`Beban contoh: ${r.demand} MW`,`Perubahan kendali: ${(r.changes||[]).map(c=>operationTime(c.seconds)+' '+c.variable+'='+c.value).join('; ')||'Tidak ada'}`,`Pertanyaan: ${r.question||'—'}`));
- lines.push('','ANALISIS PERCOBAAN 1',f.analisis1||'—','','ANALISIS PERCOBAAN 2',f.analisis2||'—','','ANALISIS OPERASI WADUK',f.analisisOperator||'—','','KESIMPULAN',f.kesimpulan||'—','','Model dasar: P(MW)=0,0083385*Q*H; η=85%; H tetap.','Model operasi: neraca volume air; luas 1 km²; H bersih dikurangi kerugian pipa; kurva debit/efisiensi sintetis; kapasitas 50 MW; batas operasi 15 m.','Energi dihitung dengan waktu operasi, termasuk faktor percepatan. Bukan data waduk tertentu.','Jawaban tidak dikirim melalui email.');
+ lines.push('','ANALISIS TABEL 1 — KETINGGIAN AIR',f.analisis1||'—','','ANALISIS TABEL 2 — DEBIT AIR',f.analisis2||'—','','ANALISIS OPERASI WADUK',f.analisisOperator||'—','','KESIMPULAN',f.kesimpulan||'—','','Model dasar: P(MW)=0,0083385*Q*H; η=85%; H tetap.','Model operasi: neraca volume air; luas 1 km²; H bersih dikurangi kerugian pipa; kurva debit/efisiensi sintetis; kapasitas 50 MW; batas operasi 15 m.','Energi dihitung dengan waktu operasi, termasuk faktor percepatan. Bukan data waduk tertentu.','Jawaban tidak dikirim melalui email.');
  const blob=new Blob(['\ufeff'+lines.join('\n')],{type:'text/plain;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='LKPD_PLTA_'+(f.kelompok||'Kelompok').replace(/[^a-z0-9_-]/gi,'_')+'.txt';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);notify('Jawaban diunduh. Gunakan Cetak / Simpan PDF jika perlu.');
 }
 $('#export').onclick=exportText;

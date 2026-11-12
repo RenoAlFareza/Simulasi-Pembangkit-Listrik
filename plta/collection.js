@@ -5,7 +5,7 @@
 })(typeof globalThis!=='undefined'?globalThis:this,function(){
  'use strict';
  const RECIPIENT='renoalfareza21@gmail.com',KEY='plta-submission-v1';
- const labels={kelas:'Kelas',kelompok:'Kelompok',tanggal:'Tanggal',anggota:'Anggota kelompok',hipotesis:'Hipotesis',analisis1:'Analisis percobaan 1',analisis2:'Analisis percobaan 2',analisisOperator:'Analisis operasi',kesimpulan:'Kesimpulan'};
+ const labels={kelas:'Kelas',kelompok:'Kelompok',tanggal:'Tanggal',anggota:'Anggota kelompok',hipotesis:'Hipotesis',analisis1:'Analisis tabel 1',analisis2:'Analisis tabel 2',analisisOperator:'Analisis operasi',kesimpulan:'Kesimpulan'};
  const numeric=v=>(typeof v==='number'||typeof v==='string'&&v.trim()&&/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:e[+-]?\d+)?$/i.test(v.trim()))&&Number.isFinite(Number(v));
  function validate(p){
   const errors=[],f=p.fields||{},operator=p.model==='operator';
@@ -20,9 +20,8 @@
    else for(const r of rows){const keys=['initialH','finalH','energy','volume','seconds','duration','scale','finalPower','averagePower'];if(!r||keys.some(k=>typeof r[k]!=='number'||!Number.isFinite(r[k]))||r.initialH<0||r.initialH>100||r.finalH<0||r.finalH>100||r.energy<0||r.volume<0||r.seconds<=0||r.duration<30||r.duration>180||r.duration%30||![1,60,600].includes(r.scale)||r.finalPower<0||r.finalPower>50||r.averagePower<0||r.averagePower>50||Math.abs(r.seconds-r.duration*r.scale)>.01||r.volume>100*r.seconds+1||Math.abs(r.energy-r.averagePower*r.seconds/3600)>.001+.005*r.seconds/3600+1e-9){add('observations','Catatan operasi tidak valid. Jalankan dan catat ulang percobaan.');break;}}
   }else for(const [type,variable,control,title]of [['height','h','q','1'],['flow','q','h','2']]){
    const rows=p.rows?.[type];
-   if(!Array.isArray(rows)||(rows.length<3||rows.length>20)||rows.some(r=>!r||!['h','q','p'].every(k=>numeric(r[k]))||+r.h<0||+r.h>100||+r.q<0||+r.q>100||+r.p<0||+r.p>83.385||!['Cukup','Kurang','Mati','Redup','Sedang','Terang'].includes(r.led)))add('observations',`Lengkapi 3–20 baris valid pada percobaan ${title}.`);
-   else if(rows.some(r=>Math.abs(+r[control]-+rows[0][control])>1e-8))add('observations',`Percobaan ${title}: variabel kontrol harus tetap.`);
-   else if(rows.some((r,i)=>rows.slice(0,i).some(a=>Math.abs(+a[variable]-+r[variable])<=1e-8)))add('observations',`Percobaan ${title}: gunakan nilai manipulasi berbeda di setiap baris.`);
+   if(!Array.isArray(rows)||(rows.length<3||rows.length>20)||rows.some(r=>!r||!['h','q','p'].every(k=>numeric(r[k]))||+r.h<0||+r.h>100||+r.q<0||+r.q>100||+r.p<0||+r.p>83.385||!['Cukup','Kurang','Mati','Redup','Sedang','Terang'].includes(r.led)))add('observations',`Lengkapi 3–20 baris valid pada Tabel ${title}.`);
+   else if(rows.some((r,i)=>rows.slice(0,i).some(a=>Math.abs(+a.h-+r.h)<=1e-8&&Math.abs(+a.q-+r.q)<=1e-8)))add('observations',`Tabel ${title}: ada baris dengan pasangan ketinggian dan debit yang sama; ubah minimal satu nilai.`);
   }
   if(!operator)for(const rows of Object.values(p.rows||{}))for(const r of rows||[]){if(!r)continue;for(const k of ['t','duration'])if(r[k]!==''&&r[k]!=null&&(!numeric(r[k])||+r[k]<0||+r[k]>180||k==='duration'&&(+r[k]<30||+r[k]%30)))add('observations','Periksa waktu dan durasi pengamatan.');if(r.t!==''&&r.t!=null&&r.duration!==''&&r.duration!=null&&+r.t>+r.duration)add('observations','Waktu teramati tidak boleh melebihi durasi.');}
   if(new TextEncoder().encode(JSON.stringify(p)).length>200000)add('observations','Data terlalu besar untuk dikumpulkan. Kurangi panjang jawaban.');
